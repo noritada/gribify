@@ -1,0 +1,15 @@
+[package]
+name = "gribify"
+version = "0.1.0"
+edition = "2024"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "_gribify"
+crate-type = ["cdylib"]
+
+[dependencies]
+grib = { version = "0.15.6", default-features = false }
+pyo3 = { version = "0.29", features = ["experimental-inspect"] }
+numpy = "0.29"
+grib-template-helpers = "0.1.4"
