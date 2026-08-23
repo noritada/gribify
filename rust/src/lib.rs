@@ -1,5 +1,4 @@
 use grib::def::grib2::template::param_set::ScanningMode;
-use grib_template_helpers::WriteToBuffer as _;
 use numpy::PyReadonlyArray1;
 use pyo3::{prelude::*, types::PyDateTime};
 
@@ -7,8 +6,7 @@ use pyo3::{prelude::*, types::PyDateTime};
 #[pyo3(name = "_gribify")]
 mod gribify {
 
-    use grib::WriteGrib2DataSections;
-    use grib_template_helpers::WriteToBuffer;
+    use grib::encoder::{self, WriteGrib2Message};
     use numpy::{PyReadonlyArray1, PyReadonlyArray2};
     use pyo3::{
         exceptions::PyRuntimeError,
@@ -37,48 +35,30 @@ mod gribify {
                 value_shape[1]
             )));
         }
-        let encoded = grib::encode_gpv(
-            values.as_slice()?,
-            grib::EncodingMethod::ComplexPacking(
-                grib::SimplePackingStrategy::Decimal(1),
-                grib::ComplexPackingStrategy::LookAhead(4),
-                grib::SpatialDifferencingOption::None,
+        let encoded = encoder::GpvEncoder::new(
+            std::borrow::Cow::Borrowed(values.as_slice()?),
+            encoder::EncodingMethod::ComplexPacking(
+                encoder::SimplePackingStrategy::Decimal(1),
+                encoder::ComplexPackingStrategy::LookAhead(4),
+                encoder::SpatialDifferencingOption::None,
             ),
         );
 
         let discipline = 0;
         let sect1_payload = super::section1(datetime)?;
         let sect3_payload = grid.section3();
-        let sect4 = super::Section4(product.as_bytes());
-        let len = 16
-            + (sect1_payload.num_bytes_required() + 5)
-            + (sect3_payload.num_bytes_required() + 5)
-            + sect4.len()
-            + encoded.section5_len()
-            + encoded.section6_len()
-            + encoded.section7_len()
-            + 4;
-        let mut buf = vec![0; len];
+        let message = encoder::SingleGrib2Message::new(
+            discipline,
+            sect1_payload,
+            None::<&[u8]>,
+            sect3_payload,
+            product.as_bytes(),
+            encoded,
+        );
+        let mut buf = vec![0; message.num_octets()];
         let mut _pos = 0;
-        _pos += grib::write_section0(discipline, len, &mut buf[_pos..])
-            .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
-        _pos += grib::write_section1(&sect1_payload, &mut buf[_pos..])
-            .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
-        _pos += grib::write_section3(&sect3_payload, &mut buf[_pos..])
-            .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
-        _pos += sect4
-            .write(&mut buf[_pos..])
-            .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
-        _pos += encoded
-            .write_section5(&mut buf[_pos..])
-            .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
-        _pos += encoded
-            .write_section6(&mut buf[_pos..])
-            .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
-        _pos += encoded
-            .write_section7(&mut buf[_pos..])
-            .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
-        _pos += grib::write_section8(&mut buf[_pos..])
+        message
+            .write(&mut buf)
             .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
 
         Ok(PyBytes::new(py, &buf))
@@ -229,28 +209,4 @@ impl<'py> TryFrom<(PyReadonlyArray1<'py, f64>, PyReadonlyArray1<'py, f64>)> for 
 
 fn normalize_longitude(val: f64) -> f64 {
     if val < 0. { val + 360. } else { val }
-}
-
-struct Section4<'b>(&'b [u8]);
-
-impl<'b> Section4<'b> {
-    fn len(&self) -> usize {
-        self.0.len() + 5
-    }
-
-    fn write(&self, buf: &mut [u8]) -> Result<usize, &'static str> {
-        let len = self.len();
-        if buf.len() < len {
-            return Err("destination buffer is too small");
-        }
-
-        let mut pos = 0;
-        pos += grib::def::grib2::SectionHeader {
-            len: len as u32,
-            sect_num: 4,
-        }
-        .write_to_buffer(&mut buf[pos..])?;
-        buf[pos..len].copy_from_slice(self.0);
-        Ok(len)
-    }
 }
