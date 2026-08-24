@@ -72,7 +72,7 @@ fn section1<'py>(datetime: Bound<'py, PyDateTime>) -> PyResult<grib::def::grib2:
         master_table_version: 29,
         local_table_version: 0,
         ref_time_significance: 0,
-        ref_time: grib::def::grib2::RefTime {
+        ref_time: grib::def::grib2::template::param_set::DateTime {
             year: datetime.getattr("year")?.extract::<u16>()?,
             month: datetime.getattr("month")?.extract::<u8>()?,
             day: datetime.getattr("day")?.extract::<u8>()?,
@@ -101,12 +101,19 @@ impl LatLngGridDef {
                 grib::def::grib2::template::Template3_0 {
                     earth: grib::def::grib2::template::param_set::EarthShape {
                         shape: 6,
-                        spherical_earth_radius_scale_factor: 0xff,
-                        spherical_earth_radius_scaled_value: 0xffffffff,
-                        major_axis_scale_factor: 0xff,
-                        major_axis_scaled_value: 0xffffffff,
-                        minor_axis_scale_factor: 0xff,
-                        minor_axis_scaled_value: 0xffffffff,
+                        spherical_earth_radius:
+                            grib::def::grib2::template::param_set::ScaledValue {
+                                scale_factor: 0xff,
+                                scaled_value: 0xffffffff,
+                            },
+                        major_axis: grib::def::grib2::template::param_set::ScaledValue {
+                            scale_factor: 0xff,
+                            scaled_value: 0xffffffff,
+                        },
+                        minor_axis: grib::def::grib2::template::param_set::ScaledValue {
+                            scale_factor: 0xff,
+                            scaled_value: 0xffffffff,
+                        },
                     },
                     lat_lon: grib::def::grib2::template::param_set::LatLonGrid::from(&self.0),
                 },
