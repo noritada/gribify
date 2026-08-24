@@ -3,7 +3,11 @@ from datetime import datetime
 import numpy as np
 
 from ._gribify import generate_grib2 as _generate_grib2
+from ._gribify import param_set
 
+__all__ = [
+    "generate_grib2", "param_set",
+]
 
 def generate_grib2(
     dt: datetime,
