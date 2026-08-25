@@ -1,12 +1,16 @@
 use grib::encoder;
 use numpy::PyReadonlyArray1;
-use pyo3::{prelude::*, types::PyDateTime};
+use pyo3::prelude::*;
 
 #[pymodule]
 #[pyo3(name = "_gribify")]
 mod gribify {
 
-    use grib::encoder::{self, WriteGrib2Message};
+    use grib::{
+        WriteToBuffer as _,
+        def::grib2::Section1Payload,
+        encoder::{self, WriteGrib2Message},
+    };
     use numpy::{PyReadonlyArray1, PyReadonlyArray2};
     use pyo3::{
         exceptions::PyRuntimeError,
@@ -17,7 +21,7 @@ mod gribify {
     #[pyfunction]
     fn generate_grib2<'py>(
         py: Python<'py>,
-        datetime: Bound<'py, PyDateTime>,
+        ident: &Identification,
         product: Bound<'py, PyBytes>,
         lats: PyReadonlyArray1<'py, f64>,
         lngs: PyReadonlyArray1<'py, f64>,
@@ -45,11 +49,10 @@ mod gribify {
         );
 
         let discipline = 0;
-        let sect1_payload = super::section1(datetime)?;
         let sect3_payload = grid.section3();
         let message = encoder::SingleGrib2Message::new(
             discipline,
-            sect1_payload,
+            ident,
             None::<&[u8]>,
             sect3_payload,
             product.as_bytes(),
@@ -62,6 +65,70 @@ mod gribify {
             .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
 
         Ok(PyBytes::new(py, &buf))
+    }
+
+    #[pyclass]
+    struct Identification(Section1Payload);
+
+    #[pymethods]
+    impl Identification {
+        #[new]
+        fn new<'py>(
+            centre_id: u16,
+            subcentre_id: u16,
+            master_table_version: u8,
+            local_table_version: u8,
+            ref_time_significance: u8,
+            ref_time: Bound<'py, PyDateTime>,
+            prod_status: u8,
+            data_type: u8,
+        ) -> PyResult<Self> {
+            let ref_time = grib::def::grib2::template::param_set::DateTime {
+                year: ref_time.getattr("year")?.extract::<u16>()?,
+                month: ref_time.getattr("month")?.extract::<u8>()?,
+                day: ref_time.getattr("day")?.extract::<u8>()?,
+                hour: ref_time.getattr("hour")?.extract::<u8>()?,
+                minute: ref_time.getattr("minute")?.extract::<u8>()?,
+                second: ref_time.getattr("second")?.extract::<u8>()?,
+            };
+            Ok(Self(Section1Payload {
+                centre_id,
+                subcentre_id,
+                master_table_version,
+                local_table_version,
+                ref_time_significance,
+                ref_time,
+                prod_status,
+                data_type,
+                optional: None,
+            }))
+        }
+
+        fn __repr__(&self) -> String {
+            format!("{:?}", self.0)
+        }
+    }
+
+    impl grib::encoder::WriteGrib2Ident for &Identification {
+        fn section1_len(&self) -> usize {
+            self.0.num_bytes_required() + 5
+        }
+
+        fn write_section1(&self, buf: &mut [u8]) -> Result<usize, &'static str> {
+            let len = self.section1_len();
+            if buf.len() < len {
+                return Err("destination buffer is too small");
+            }
+
+            let mut pos = 0;
+            pos += grib::def::grib2::SectionHeader {
+                len: len as u32,
+                sect_num: 1,
+            }
+            .write_to_buffer(&mut buf[pos..])?;
+            pos += self.0.write_to_buffer(&mut buf[pos..])?;
+            Ok(pos)
+        }
     }
 
     #[pymodule]
@@ -110,28 +177,6 @@ mod gribify {
             }
         }
     }
-}
-
-fn section1<'py>(datetime: Bound<'py, PyDateTime>) -> PyResult<grib::def::grib2::Section1Payload> {
-    let sect = grib::def::grib2::Section1Payload {
-        centre_id: 0xffff,
-        subcentre_id: 0,
-        master_table_version: 29,
-        local_table_version: 0,
-        ref_time_significance: 0,
-        ref_time: grib::def::grib2::template::param_set::DateTime {
-            year: datetime.getattr("year")?.extract::<u16>()?,
-            month: datetime.getattr("month")?.extract::<u8>()?,
-            day: datetime.getattr("day")?.extract::<u8>()?,
-            hour: datetime.getattr("hour")?.extract::<u8>()?,
-            minute: datetime.getattr("minute")?.extract::<u8>()?,
-            second: datetime.getattr("second")?.extract::<u8>()?,
-        },
-        prod_status: 0,
-        data_type: 0,
-        optional: None,
-    };
-    Ok(sect)
 }
 
 struct LatLngGridDef(encoder::LatLonGrid);
