@@ -10,6 +10,7 @@ def main():
     lats = np.linspace(30.0, 40.0, 3)
     lngs = np.linspace(130.0, 140.0, 4)
     a = np.arange(12).astype(float).reshape(4, -1)
+    discipline = 0
     ident = gribify.Identification(
         centre_id=0xFFFF,
         subcentre_id=0,
@@ -24,7 +25,7 @@ def main():
         b"\x00\x00\x00\x00\xff\xff\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00"
         + b"\x00\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"
     )
-    g = gribify.generate_grib2(ident, product, lats, lngs, a)
+    g = gribify.grib2_message(discipline, ident, product, lats, lngs, a)
     sys.stdout.buffer.write(g)
     sys.stdout.buffer.flush()
 

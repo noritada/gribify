@@ -19,8 +19,9 @@ mod gribify {
     };
 
     #[pyfunction]
-    fn generate_grib2<'py>(
+    fn grib2_message<'py>(
         py: Python<'py>,
+        discipline: u8,
         ident: &Identification,
         product: Bound<'py, PyBytes>,
         lats: PyReadonlyArray1<'py, f64>,
@@ -48,7 +49,6 @@ mod gribify {
             ),
         );
 
-        let discipline = 0;
         let sect3_payload = grid.section3();
         let message = encoder::SingleGrib2Message::new(
             discipline,
