@@ -7,7 +7,6 @@ use pyo3::prelude::*;
 mod gribify {
 
     use grib::{
-        WriteToBuffer as _,
         def::grib2::Section1Payload,
         encoder::{self, WriteGrib2Message},
     };
@@ -52,7 +51,7 @@ mod gribify {
         let sect3_payload = grid.section3();
         let message = encoder::SingleGrib2Message::new(
             discipline,
-            ident,
+            ident.inner(),
             None::<&[u8]>,
             sect3_payload,
             product.as_bytes(),
@@ -109,25 +108,9 @@ mod gribify {
         }
     }
 
-    impl grib::encoder::WriteGrib2Ident for &Identification {
-        fn section1_len(&self) -> usize {
-            self.0.num_bytes_required() + 5
-        }
-
-        fn write_section1(&self, buf: &mut [u8]) -> Result<usize, &'static str> {
-            let len = self.section1_len();
-            if buf.len() < len {
-                return Err("destination buffer is too small");
-            }
-
-            let mut pos = 0;
-            pos += grib::def::grib2::SectionHeader {
-                len: len as u32,
-                sect_num: 1,
-            }
-            .write_to_buffer(&mut buf[pos..])?;
-            pos += self.0.write_to_buffer(&mut buf[pos..])?;
-            Ok(pos)
+    impl Identification {
+        fn inner(&self) -> &Section1Payload {
+            &self.0
         }
     }
 
