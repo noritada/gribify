@@ -24,7 +24,7 @@ mod gribify {
         py: Python<'py>,
         discipline: u8,
         ident: &Identification,
-        product: Bound<'py, PyBytes>,
+        product: Bound<'py, PyAny>,
         lats: PyReadonlyArray1<'py, f64>,
         lngs: PyReadonlyArray1<'py, f64>,
         values: PyReadonlyArray2<'py, f64>,
@@ -50,13 +50,29 @@ mod gribify {
             ),
         );
 
+        let product_bytes;
+        let product_payload: &[u8] =
+            if let Ok(definition) = product.extract::<PyRef<ProductDefinition>>() {
+                use grib::WriteToBuffer;
+                product_bytes = {
+                    let mut buf = vec![0; definition.0.num_bytes_required()];
+                    definition
+                        .0
+                        .write_to_buffer(&mut buf)
+                        .map_err(pyo3::exceptions::PyValueError::new_err)?;
+                    buf
+                };
+                &product_bytes
+            } else {
+                product.cast::<PyBytes>()?.as_bytes()
+            };
         let sect3_payload = grid.section3();
         let message = encoder::SingleGrib2Message::new(
             discipline,
             ident.inner(),
             None::<&[u8]>,
             sect3_payload,
-            product.as_bytes(),
+            product_payload,
             encoded,
         );
         let mut buf = vec![0; message.num_octets()];
@@ -117,7 +133,7 @@ mod gribify {
     }
 
     #[pymodule_export]
-    use crate::product::param_set;
+    use crate::product::{ProductDefinition, Template4_0, Template4_1, Template4_8, param_set};
 }
 
 struct LatLngGridDef(encoder::LatLonGrid);
