@@ -1,14 +1,14 @@
-from _typeshed import Incomplete
+import numpy as np
 from datetime import datetime
 from typing import final, Union
-from . import param_set
+from . import param_set as param_set
 
 @final
 class Identification:
     def __new__(cls, /, centre_id: int, subcentre_id: int, master_table_version: int, local_table_version: int, ref_time_significance: int, ref_time: datetime, prod_status: int, data_type: int) -> Identification: ...
     def __repr__(self, /) -> str: ...
 
-def grib2_message(discipline: int, ident: Identification, product: Union[ProductDefinition, bytes], lats: Incomplete, lngs: Incomplete, values: Incomplete) -> bytes: ...
+def grib2_message(discipline: int, ident: Identification, product: Union[ProductDefinition, bytes], lats: np.ndarray[tuple[int], np.dtype[np.float64]], lngs: np.ndarray[tuple[int], np.dtype[np.float64]], values: np.ndarray[tuple[int, int], np.dtype[np.float64]]) -> bytes: ...
 
 @final
 class ProductDefinition:

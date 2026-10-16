@@ -3,7 +3,7 @@ from datetime import datetime
 
 @final
 class GeneratingProcess:
-    def __new__(self, /, process_type: int, background_process: int, process_id: int) -> GeneratingProcess: ...
+    def __new__(cls, /, process_type: int, background_process: int, process_id: int) -> GeneratingProcess: ...
     def __repr__(self, /) -> str: ...
     @property
     def background_process(self, /) -> int:
@@ -38,7 +38,7 @@ class GeneratingProcess:
 
 @final
 class ProductParam:
-    def __new__(self, /, category: int, num: int) -> ProductParam: ...
+    def __new__(cls, /, category: int, num: int) -> ProductParam: ...
     def __repr__(self, /) -> str: ...
     @property
     def category(self, /) -> int:
@@ -60,16 +60,6 @@ class ProductParam:
         """
         Parameter number (see Code Table 4.2).
         """
-
-@final
-class ProductParam2:
-    def __new__(cls, /, category: int, num: int) -> ProductParam2: ...
-    def __repr__(self, /) -> str: ...
-
-@final
-class TimeRangeInt32:
-    def __new__(cls, /, unit: int, len: int) -> TimeRangeInt32: ...
-    def __repr__(self, /) -> str: ...
 
 @final
 class ForecastTime:
