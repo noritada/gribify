@@ -9,7 +9,7 @@ name = "_gribify"
 crate-type = ["cdylib"]
 
 [dependencies]
-grib = { version = "0.19.1", default-features = false }
+grib = { version = "0.20.0", default-features = false }
 pyo3 = { version = "0.29", features = ["experimental-inspect"] }
 numpy = "0.29"
 grib-template-helpers = "0.1.4"
