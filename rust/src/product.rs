@@ -131,7 +131,7 @@ impl Template4_8 {
             },
             forecast_time: forecast_time.0.clone(),
             horizontal: horizontal.0.clone(),
-            percentile: statistical.0.clone(),
+            time_interval: statistical.0.clone(),
         })
     }
     fn __repr__(&self) -> String {
