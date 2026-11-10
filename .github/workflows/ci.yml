@@ -1,5 +1,5 @@
-# Based on maturin generate-ci; customized to build CPython 3.11–3.15.
-# Keep the explicit interpreter lists in sync when changing Python support.
+# Build one CPython 3.11+ abi3 wheel per platform.
+# Test the same wheel on each supported CPython minor version.
 name: CI
 
 on:
@@ -42,7 +42,7 @@ jobs:
           # Select interpreters inside the build container, not on the runner.
           args: >-
             --release --out dist
-            --interpreter python3.11 python3.12 python3.13 python3.14 python3.15
+            --interpreter python3.11
           sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
           manylinux: auto
       - name: Upload wheels
@@ -73,7 +73,7 @@ jobs:
           # Select interpreters inside the build container, not on the runner.
           args: >-
             --release --out dist
-            --interpreter python3.11 python3.12 python3.13 python3.14 python3.15
+            --interpreter python3.11
           sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
           manylinux: musllinux_1_2
       - name: Upload wheels
@@ -103,26 +103,6 @@ jobs:
         with:
           python-version: "3.11"
           architecture: ${{ matrix.platform.python_arch }}
-      - uses: actions/setup-python@v6
-        id: python312
-        with:
-          python-version: "3.12"
-          architecture: ${{ matrix.platform.python_arch }}
-      - uses: actions/setup-python@v6
-        id: python313
-        with:
-          python-version: "3.13"
-          architecture: ${{ matrix.platform.python_arch }}
-      - uses: actions/setup-python@v6
-        id: python314
-        with:
-          python-version: "3.14"
-          architecture: ${{ matrix.platform.python_arch }}
-      - uses: actions/setup-python@v6
-        id: python315
-        with:
-          python-version: "3.15"
-          architecture: ${{ matrix.platform.python_arch }}
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
@@ -131,10 +111,6 @@ jobs:
             --release --out dist
             --interpreter
             "${{ steps.python311.outputs.python-path }}"
-            "${{ steps.python312.outputs.python-path }}"
-            "${{ steps.python313.outputs.python-path }}"
-            "${{ steps.python314.outputs.python-path }}"
-            "${{ steps.python315.outputs.python-path }}"
           sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
       - name: Upload wheels
         uses: actions/upload-artifact@v6
@@ -157,22 +133,6 @@ jobs:
         id: python311
         with:
           python-version: "3.11"
-      - uses: actions/setup-python@v6
-        id: python312
-        with:
-          python-version: "3.12"
-      - uses: actions/setup-python@v6
-        id: python313
-        with:
-          python-version: "3.13"
-      - uses: actions/setup-python@v6
-        id: python314
-        with:
-          python-version: "3.14"
-      - uses: actions/setup-python@v6
-        id: python315
-        with:
-          python-version: "3.15"
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
@@ -181,16 +141,71 @@ jobs:
             --release --out dist
             --interpreter
             "${{ steps.python311.outputs.python-path }}"
-            "${{ steps.python312.outputs.python-path }}"
-            "${{ steps.python313.outputs.python-path }}"
-            "${{ steps.python314.outputs.python-path }}"
-            "${{ steps.python315.outputs.python-path }}"
           sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
       - name: Upload wheels
         uses: actions/upload-artifact@v6
         with:
           name: wheels-macos-${{ matrix.platform.target }}
           path: dist
+
+  test-wheels:
+    name: Test wheel (${{ matrix.platform.artifact }}, Python ${{ matrix.python }})
+    needs: [linux, windows, macos]
+    runs-on: ${{ matrix.platform.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13", "3.14", "3.15"]
+        # Run natively where hosted runners are available. Other Linux targets
+        # are cross-built above but are not executed by this test job.
+        platform:
+          - runner: ubuntu-22.04
+            artifact: wheels-linux-x86_64
+            python_arch: x64
+          - runner: ubuntu-24.04-arm
+            artifact: wheels-linux-aarch64
+            python_arch: arm64
+          - runner: windows-latest
+            artifact: wheels-windows-x64
+            python_arch: x64
+          - runner: windows-latest
+            artifact: wheels-windows-x86
+            python_arch: x86
+          - runner: windows-11-arm
+            artifact: wheels-windows-aarch64
+            python_arch: arm64
+          - runner: macos-15-intel
+            artifact: wheels-macos-x86_64
+            python_arch: x64
+          - runner: macos-latest
+            artifact: wheels-macos-aarch64
+            python_arch: arm64
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+          architecture: ${{ matrix.platform.python_arch }}
+      - uses: actions/download-artifact@v7
+        with:
+          name: ${{ matrix.platform.artifact }}
+          path: dist
+      - name: Install the built abi3 wheel
+        shell: python
+        run: |
+          from pathlib import Path
+          import subprocess
+          import sys
+
+          wheels = list(Path("dist").glob("*.whl"))
+          assert len(wheels) == 1, wheels
+          assert "-cp311-abi3-" in wheels[0].name, wheels[0]
+          subprocess.run(
+              [sys.executable, "-m", "pip", "install", str(wheels[0])],
+              check=True,
+          )
+      - name: Test the installed wheel
+        run: python -I -m unittest discover -s tests -v
 
   sdist:
     runs-on: ubuntu-latest
@@ -211,7 +226,7 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     if: ${{ startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' }}
-    needs: [linux, musllinux, windows, macos, sdist]
+    needs: [linux, musllinux, windows, macos, sdist, test-wheels]
     permissions:
       # Use to sign the release artifacts
       id-token: write
