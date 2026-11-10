@@ -1,11 +1,12 @@
 # Build CPython 3.11+ abi3 wheels and version-specific 3.14t/3.15t wheels.
-# 3.13t is excluded because PyO3 0.29 rejects free-threaded CPython < 3.14.
-# abi3t is excluded because the Rust numpy crate 0.29 has an array-layout bug:
-# a 3.15t abi3t wheel builds, but encoding fails with
+# 3.13t is excluded because PyO3 0.30 rejects free-threaded CPython < 3.14.
+# Historical reason for version-specific free-threaded wheels: the Rust numpy
+# crate 0.29 had an abi3t array-layout bug. A 3.15t abi3t wheel built, but failed with
 # TypeError: 'ndarray' object is not an instance of 'ndarray'.
 # See https://github.com/PyO3/rust-numpy/issues/555.
-# Revisit abi3t after upgrading the bindings and testing NumPy array handling
-# on both GIL-enabled and free-threaded CPython 3.15+.
+# numpy 0.30 fixes this; local macOS ARM64 tests pass with the same abi3t wheel
+# on both GIL-enabled and free-threaded CPython 3.15. CI still uses version-specific
+# wheels pending a separate abi3t build/test matrix update.
 # Test the same wheel on each supported CPython minor version.
 name: CI
 
@@ -221,8 +222,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # PyO3 0.29 no longer supports 3.13t. numpy 0.29 has an abi3t
-        # array-layout bug, so use version-specific wheels for both versions.
+        # PyO3 0.30 does not support 3.13t. Keep version-specific wheels here;
+        # see the abi3t migration notes at the top of this workflow.
         python: ["3.14", "3.15"]
         # Use native 64-bit runners and PyPA containers for Linux builds.
         # Test glibc wheels on the runner (recent NumPy wheels need newer
