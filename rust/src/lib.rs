@@ -4,7 +4,7 @@ use grib::encoder;
 use numpy::PyReadonlyArray1;
 use pyo3::prelude::*;
 
-#[pymodule]
+#[pymodule(gil_used = false)]
 #[pyo3(name = "_gribify")]
 mod gribify {
 

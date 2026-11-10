@@ -138,7 +138,7 @@ impl Template4_8 {
         format!("{:?}", self.0)
     }
 }
-#[pymodule]
+#[pymodule(gil_used = false)]
 pub mod param_set {
     use super::params;
     use pyo3::exceptions::PyValueError;

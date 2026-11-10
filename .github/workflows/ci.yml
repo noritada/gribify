@@ -1,4 +1,11 @@
-# Build one CPython 3.11+ abi3 wheel per platform.
+# Build CPython 3.11+ abi3 wheels and version-specific 3.14t/3.15t wheels.
+# 3.13t is excluded because PyO3 0.29 rejects free-threaded CPython < 3.14.
+# abi3t is excluded because the Rust numpy crate 0.29 has an array-layout bug:
+# a 3.15t abi3t wheel builds, but encoding fails with
+# TypeError: 'ndarray' object is not an instance of 'ndarray'.
+# See https://github.com/PyO3/rust-numpy/issues/555.
+# Revisit abi3t after upgrading the bindings and testing NumPy array handling
+# on both GIL-enabled and free-threaded CPython 3.15+.
 # Test the same wheel on each supported CPython minor version.
 name: CI
 
@@ -207,6 +214,109 @@ jobs:
       - name: Test the installed wheel
         run: python -I -m unittest discover -s tests -v
 
+  free-threaded:
+    name: Free-threaded (${{ matrix.platform.name }}, Python ${{ matrix.python }})
+    runs-on: ${{ matrix.platform.runner }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        # PyO3 0.29 no longer supports 3.13t. numpy 0.29 has an abi3t
+        # array-layout bug, so use version-specific wheels for both versions.
+        python: ["3.14", "3.15"]
+        # Use native 64-bit runners and PyPA containers for Linux builds.
+        # Test glibc wheels on the runner (recent NumPy wheels need newer
+        # glibc than the build image); test musl wheels inside their image.
+        # The existing 32-bit and other cross-built targets retain abi3 only.
+        platform:
+          - name: linux-x86_64
+            runner: ubuntu-22.04
+            target: x86_64
+            python_arch: x64
+            manylinux: "2014"
+            container: quay.io/pypa/manylinux2014_x86_64:latest
+          - name: linux-aarch64
+            runner: ubuntu-24.04-arm
+            target: aarch64
+            python_arch: arm64
+            manylinux: "2014"
+            container: quay.io/pypa/manylinux2014_aarch64:latest
+          - name: musllinux-x86_64
+            runner: ubuntu-22.04
+            target: x86_64-unknown-linux-musl
+            python_arch: x64
+            manylinux: musllinux_1_2
+            container: quay.io/pypa/musllinux_1_2_x86_64:latest
+          - name: musllinux-aarch64
+            runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-musl
+            python_arch: arm64
+            manylinux: musllinux_1_2
+            container: quay.io/pypa/musllinux_1_2_aarch64:latest
+          - name: windows-x64
+            runner: windows-latest
+            target: x64
+            python_arch: x64
+          - name: windows-aarch64
+            runner: windows-11-arm
+            target: aarch64
+            python_arch: arm64
+          - name: macos-x86_64
+            runner: macos-15-intel
+            target: x86_64
+            python_arch: x64
+          - name: macos-aarch64
+            runner: macos-latest
+            target: aarch64
+            python_arch: arm64
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        if: ${{ !startsWith(matrix.platform.name, 'musllinux-') }}
+        id: python
+        with:
+          python-version: ${{ matrix.python }}t
+          architecture: ${{ matrix.platform.python_arch }}
+      - name: Select interpreter
+        id: interpreter
+        shell: bash
+        env:
+          PYTHON_VERSION: ${{ matrix.python }}
+          NATIVE_PYTHON: ${{ steps.python.outputs.python-path }}
+        run: |
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            tag="cp${PYTHON_VERSION//./}"
+            echo "path=/opt/python/${tag}-${tag}t/bin/python" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=$NATIVE_PYTHON" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build free-threaded wheel
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.platform.target }}
+          manylinux: ${{ matrix.platform.manylinux }}
+          container: ${{ matrix.platform.container }}
+          args: >-
+            --release --out dist
+            --interpreter "${{ steps.interpreter.outputs.path }}"
+          sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
+      - name: Test free-threaded wheel (musllinux container)
+        if: startsWith(matrix.platform.name, 'musllinux-')
+        env:
+          BUILD_CONTAINER: ${{ matrix.platform.container }}
+          TEST_PYTHON: ${{ steps.interpreter.outputs.path }}
+        run: |
+          docker run --rm --volume "$GITHUB_WORKSPACE:/io" --workdir /io \
+            "$BUILD_CONTAINER" "$TEST_PYTHON" -I .github/scripts/test_free_threaded_wheel.py
+      - name: Test free-threaded wheel (native runner)
+        if: ${{ !startsWith(matrix.platform.name, 'musllinux-') }}
+        run: python -I .github/scripts/test_free_threaded_wheel.py
+      - uses: actions/upload-artifact@v6
+        with:
+          name: wheels-free-threaded-${{ matrix.platform.name }}-${{ matrix.python }}t
+          path: dist/*.whl
+          if-no-files-found: error
+
   sdist:
     runs-on: ubuntu-latest
     steps:
@@ -226,7 +336,7 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     if: ${{ startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' }}
-    needs: [linux, musllinux, windows, macos, sdist, test-wheels]
+    needs: [linux, musllinux, windows, macos, sdist, test-wheels, free-threaded]
     permissions:
       # Use to sign the release artifacts
       id-token: write
