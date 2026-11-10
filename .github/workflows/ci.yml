@@ -1,12 +1,7 @@
-# Build CPython 3.11+ abi3 wheels and version-specific 3.14t/3.15t wheels.
+# Build CPython 3.11+ abi3, version-specific 3.14t, and CPython 3.15+ abi3t wheels.
 # 3.13t is excluded because PyO3 0.30 rejects free-threaded CPython < 3.14.
-# Historical reason for version-specific free-threaded wheels: the Rust numpy
-# crate 0.29 had an abi3t array-layout bug. A 3.15t abi3t wheel built, but failed with
-# TypeError: 'ndarray' object is not an instance of 'ndarray'.
-# See https://github.com/PyO3/rust-numpy/issues/555.
-# numpy 0.30 fixes this; local macOS ARM64 tests pass with the same abi3t wheel
-# on both GIL-enabled and free-threaded CPython 3.15. CI still uses version-specific
-# wheels pending a separate abi3t build/test matrix update.
+# Build abi3t separately from abi3 and test the same abi3t wheel on both
+# GIL-enabled and free-threaded CPython 3.15.
 # Test the same wheel on each supported CPython minor version.
 name: CI
 
@@ -222,8 +217,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # PyO3 0.30 does not support 3.13t. Keep version-specific wheels here;
-        # see the abi3t migration notes at the top of this workflow.
+        # PyO3 0.30 does not support 3.13t; abi3t starts at 3.15.
+        # Only the 3.15 build enables abi3t; 3.14t remains version-specific.
         python: ["3.14", "3.15"]
         # Use native 64-bit runners and PyPA containers for Linux builds.
         # Test glibc wheels on the runner (recent NumPy wheels need newer
@@ -300,6 +295,7 @@ jobs:
           args: >-
             --release --out dist
             --interpreter "${{ steps.interpreter.outputs.path }}"
+            ${{ matrix.python == '3.15' && '--features pyo3/abi3t-py315' || '' }}
           sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
       - name: Test free-threaded wheel (musllinux container)
         if: startsWith(matrix.platform.name, 'musllinux-')
@@ -312,6 +308,22 @@ jobs:
       - name: Test free-threaded wheel (native runner)
         if: ${{ !startsWith(matrix.platform.name, 'musllinux-') }}
         run: python -I .github/scripts/test_free_threaded_wheel.py
+      - uses: actions/setup-python@v6
+        if: ${{ matrix.python == '3.15' && !startsWith(matrix.platform.name, 'musllinux-') }}
+        with:
+          python-version: "3.15"
+          architecture: ${{ matrix.platform.python_arch }}
+      - name: Test the same abi3t wheel with the GIL (native runner)
+        if: ${{ matrix.python == '3.15' && !startsWith(matrix.platform.name, 'musllinux-') }}
+        run: python -I .github/scripts/test_free_threaded_wheel.py --gil-enabled
+      - name: Test the same abi3t wheel with the GIL (musllinux container)
+        if: matrix.python == '3.15' && startsWith(matrix.platform.name, 'musllinux-')
+        env:
+          BUILD_CONTAINER: ${{ matrix.platform.container }}
+        run: |
+          docker run --rm --volume "$GITHUB_WORKSPACE:/io" --workdir /io \
+            "$BUILD_CONTAINER" /opt/python/cp315-cp315/bin/python -I \
+            .github/scripts/test_free_threaded_wheel.py --gil-enabled
       - uses: actions/upload-artifact@v6
         with:
           name: wheels-free-threaded-${{ matrix.platform.name }}-${{ matrix.python }}t

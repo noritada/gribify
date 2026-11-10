@@ -1,4 +1,5 @@
-"""Install a version-specific wheel and test it without forcing the GIL off."""
+"""Test 3.14t or abi3t wheels, including abi3t on GIL-enabled Python."""
+import argparse
 from pathlib import Path
 import subprocess
 import sys
@@ -6,11 +7,21 @@ import sysconfig
 
 
 def main():
-    assert sysconfig.get_config_var("Py_GIL_DISABLED") == 1
-    assert not sys._is_gil_enabled(), "Interpreter started with the GIL enabled"
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("wheel_dir", nargs="?", type=Path, default=Path("dist"))
+    parser.add_argument("--gil-enabled", action="store_true")
+    args = parser.parse_args()
+    assert bool(sysconfig.get_config_var("Py_GIL_DISABLED")) == (not args.gil_enabled)
+    assert sys._is_gil_enabled() == args.gil_enabled, "Unexpected initial GIL state"
     version = f"{sys.version_info.major}{sys.version_info.minor}"
-    wheel_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("dist")
-    wheels = list(wheel_dir.glob(f"*-cp{version}-cp{version}t-*.whl"))
+    if sys.version_info >= (3, 15):
+        # maturin emits the compressed abi3.abi3t tag for a wheel usable by
+        # both runtime flavors. Also accept an abi3t-only tag.
+        wheels = [p for p in args.wheel_dir.glob("*-cp315-*-*.whl")
+                  if "abi3t" in p.name.split("-")[-2].split(".")]
+    else:
+        assert version == "314" and not args.gil_enabled
+        wheels = list(args.wheel_dir.glob("*-cp314-cp314t-*.whl"))
     assert len(wheels) == 1, wheels
     subprocess.run(
         [sys.executable, "-m", "pip", "install", "--only-binary=:all:", str(wheels[0])],
@@ -21,13 +32,14 @@ def main():
     subprocess.run([sys.executable, "-I", "-c", """
 import sys
 import unittest
-assert not sys._is_gil_enabled()
+expected_gil = sys.argv[1] == '1'
+assert sys._is_gil_enabled() == expected_gil
 suite = unittest.defaultTestLoader.discover('tests')
-assert not sys._is_gil_enabled(), 'An imported extension enabled the GIL'
+assert sys._is_gil_enabled() == expected_gil, 'An imported extension changed the GIL state'
 result = unittest.TextTestRunner(verbosity=2).run(suite)
-assert not sys._is_gil_enabled(), 'An extension enabled the GIL during testing'
+assert sys._is_gil_enabled() == expected_gil, 'An extension changed the GIL state during testing'
 sys.exit(0 if result.wasSuccessful() else 1)
-"""], check=True)
+""", "1" if args.gil_enabled else "0"], check=True)
 
 
 if __name__ == "__main__":
