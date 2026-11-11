@@ -27,3 +27,14 @@ Repository = "https://github.com/noritada/gribify"
 
 [tool.maturin]
 module-name = "gribify._gribify"
+
+[dependency-groups]
+docs = [
+    "mkdocs>=1.6,<2",
+    "mkdocstrings[python]>=0.30,<1",
+    # mkdocstrings 0.30 uses the pre-12 Highlight constructor.
+    "pymdown-extensions>=10,<12",
+]
+
+[tool.uv.dependency-groups]
+docs = { requires-python = ">=3.11" }

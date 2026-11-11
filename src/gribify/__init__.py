@@ -27,6 +27,22 @@ def grib2_message(
 
     Parameters
     ----------
+    discipline : int
+        Discipline - GRIB Master Table Number (see Code Table 0.0).
+
+        Encoded as an unsigned 8-bit integer. Accepted range: 0 to 255 (inclusive).
+        Code-table validity is the caller's responsibility.
+    ident : Identification
+        Section 1 - Identification section.
+    product : Union[ProductDefinition, bytes]
+        Section 4 - Product definition section.
+
+        Python wrapper: accepts a structured definition or raw section payload
+        bytes, excluding the five-octet section header.
+    lats : numpy.ndarray
+        Python wrapper: nonempty one-dimensional float64 latitude array.
+    lngs : numpy.ndarray
+        Python wrapper: nonempty one-dimensional float64 longitude array.
     values : numpy.ndarray or numpy.ma.MaskedArray
         Grid values. Masked entries and NaNs are encoded as missing values.
 
@@ -53,6 +69,11 @@ def grib2_message(
         precision also depends on the data range and binary packing scale.
         -32768 raises ValueError; values outside the signed 16-bit Python-to-Rust
         conversion range raise OverflowError. Non-integer values raise TypeError.
+
+    Returns
+    -------
+    bytes
+        The encoded GRIB2 message.
     """
     if np.ma.isMaskedArray(values):
         values = np.ascontiguousarray(values.filled(np.nan))
