@@ -4,7 +4,7 @@ from ._gribify import grib2_message as _grib2_message
 from ._gribify import (
     param_set, Identification, ProductDefinition, Template4_0, Template4_1, Template4_8,
 )
-from typing import Union
+from typing import Literal, Union
 
 
 __all__ = [
@@ -19,6 +19,9 @@ def grib2_message(
     lats: np.ndarray[tuple[int], np.dtype[np.float64]],
     lngs: np.ndarray[tuple[int], np.dtype[np.float64]],
     values: np.ndarray[tuple[int, int], np.dtype[np.float64]],
+    *,
+    packing: Literal["complex", "simple"] = "complex",
+    decimal_scale: int,
 ) -> bytes:
     """Encode a GRIB2 message.
 
@@ -30,7 +33,30 @@ def grib2_message(
         Requires a two-dimensional float64 array with shape
         ``(len(lngs), len(lats))``. Masked entries are filled with NaN,
         regardless of ``fill_value``, without modifying the input.
+    packing : {"complex", "simple"}, optional
+        Python wrapper: selects complex packing (template 5.2, the default)
+        or simple packing (template 5.0).
+
+        Other strings raise ValueError.
+    decimal_scale : int
+        A strategy specifying how many decimal places to consider valid for the
+        numbers. This strategy is effective for various types of data, such as
+        observation data obtained from specific observation instruments, where
+        precision is clearly defined.
+
+        Encoded as a signed 16-bit sign-magnitude integer. Accepted range:
+        -32767 to 32767 (inclusive). Python wrapper: passed to
+        ``encoder::SimplePackingStrategy::Decimal`` for both packing methods;
+        required, with no default. For example, 2 selects two decimal places, 0 selects
+        units, and -1 selects tens. This controls the encoder's scaling,
+        rather than applying Python's round function to the input. Actual
+        precision also depends on the data range and binary packing scale.
+        -32768 raises ValueError; values outside the signed 16-bit Python-to-Rust
+        conversion range raise OverflowError. Non-integer values raise TypeError.
     """
     if np.ma.isMaskedArray(values):
         values = np.ascontiguousarray(values.filled(np.nan))
-    return _grib2_message(discipline, ident, product, lats, lngs, values)
+    return _grib2_message(
+        discipline, ident, product, lats, lngs, values,
+        packing=packing, decimal_scale=decimal_scale,
+    )

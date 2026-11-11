@@ -20,6 +20,7 @@ mod gribify {
     };
 
     #[pyfunction]
+    #[pyo3(signature = (discipline, ident, product, lats, lngs, values, *, packing="complex", decimal_scale))]
     fn grib2_message<'py>(
         py: Python<'py>,
         discipline: u8,
@@ -28,7 +29,27 @@ mod gribify {
         lats: PyReadonlyArray1<'py, f64>,
         lngs: PyReadonlyArray1<'py, f64>,
         values: PyReadonlyArray2<'py, f64>,
+        packing: &str,
+        decimal_scale: i16,
     ) -> PyResult<Bound<'py, PyBytes>> {
+        if decimal_scale == i16::MIN {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "decimal_scale must be between -32767 and 32767 (inclusive)",
+            ));
+        }
+        let method = match packing {
+            "simple" => encoder::EncodingMethod::SimplePacking(
+                encoder::SimplePackingStrategy::Decimal(decimal_scale),
+            ),
+            "complex" => encoder::EncodingMethod::ComplexPacking(
+                encoder::SimplePackingStrategy::Decimal(decimal_scale),
+                encoder::ComplexPackingStrategy::LookAhead(4),
+                encoder::SpatialDifferencingOption::None,
+            ),
+            _ => return Err(pyo3::exceptions::PyValueError::new_err(
+                "packing must be 'complex' or 'simple'",
+            )),
+        };
         let grid = super::LatLngGridDef::try_from((lats, lngs))?;
         let value_view = values.as_array();
         let value_shape = value_view.shape();
@@ -43,11 +64,7 @@ mod gribify {
         }
         let encoded = encoder::GpvEncoder::new(
             std::borrow::Cow::Borrowed(values.as_slice()?),
-            encoder::EncodingMethod::ComplexPacking(
-                encoder::SimplePackingStrategy::Decimal(1),
-                encoder::ComplexPackingStrategy::LookAhead(4),
-                encoder::SpatialDifferencingOption::None,
-            ),
+            method,
         );
 
         let product_bytes;

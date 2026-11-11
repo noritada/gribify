@@ -26,7 +26,7 @@ class ThreadingTests(unittest.TestCase):
         # input arrays while an encoding operation is using them.
         for array in (lats, lngs, values):
             array.flags.writeable = False
-        expected = g.grib2_message(0, ident, product, lats, lngs, values)
+        expected = g.grib2_message(0, ident, product, lats, lngs, values, decimal_scale=1)
         barrier = Barrier(4, timeout=30)
 
         def encode(worker):
@@ -34,7 +34,7 @@ class ThreadingTests(unittest.TestCase):
             for _ in range(20):
                 # Exercise both shared inputs and per-thread NumPy allocation.
                 data = values if worker % 2 else values.copy()
-                actual = g.grib2_message(0, ident, product, lats, lngs, data)
+                actual = g.grib2_message(0, ident, product, lats, lngs, data, decimal_scale=1)
                 self.assertEqual(actual, expected)
 
         with ThreadPoolExecutor(max_workers=4) as pool:

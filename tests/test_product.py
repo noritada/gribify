@@ -12,7 +12,7 @@ ps = g.param_set
 def section4(product):
     ident = g.Identification(65535, 0, 29, 0, 0, datetime(2026, 1, 1), 0, 0)
     message = g.grib2_message(0, ident, product, np.linspace(30, 40, 3),
-                             np.linspace(130, 140, 4), np.arange(12.).reshape(4, 3))
+                             np.linspace(130, 140, 4), np.arange(12.).reshape(4, 3), decimal_scale=1)
     assert message[:4] == b'GRIB'
     assert int.from_bytes(message[8:16], 'big') == len(message)
     assert message[-4:] == b'7777'

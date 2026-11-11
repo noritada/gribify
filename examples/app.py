@@ -41,7 +41,7 @@ def main():
             ),
         )
     )
-    g = gribify.grib2_message(discipline, ident, product, lats, lngs, a)
+    g = gribify.grib2_message(discipline, ident, product, lats, lngs, a, decimal_scale=1)
     sys.stdout.buffer.write(g)
     sys.stdout.buffer.flush()
 
