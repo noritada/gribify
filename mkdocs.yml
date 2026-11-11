@@ -10,6 +10,7 @@ nav:
       - Building the docs: development/docs.md
 theme:
   name: readthedocs
+  highlightjs: false
 plugins:
   - search
   - mkdocstrings:
@@ -25,3 +26,9 @@ plugins:
             heading_level: 2
 markdown_extensions:
   - admonition
+
+extra_css:
+  - assets/vendor/highlightjs/github.min.css
+extra_javascript:
+  - assets/vendor/highlightjs/highlight.min.js
+  - assets/js/highlight-init.js

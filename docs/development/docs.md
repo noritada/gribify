@@ -33,3 +33,15 @@ are also available to editors that read stub docstrings. They do not change
 runtime `help()` output, which still comes from Rust's documentation comments.
 
 HTML pages can be rebuilt with the command above.
+
+## Syntax highlighting assets
+
+Highlight.js 11.8.0 and its GitHub stylesheet are bundled under
+`docs/assets/vendor/highlightjs/`. Pages load these local files instead of
+contacting a CDN. The theme's built-in highlight.js loading is disabled;
+`docs/assets/js/highlight-init.js` initializes the bundled library.
+
+The [BSD-3-Clause license](../assets/vendor/highlightjs/LICENSE) and
+[source URLs and checksums](../assets/vendor/highlightjs/README.txt) are included
+in both the repository and the generated site. When updating the assets,
+update the JavaScript and CSS together and preserve the accompanying license.
