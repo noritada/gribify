@@ -71,3 +71,18 @@ report the Markdown filename and original line number.
 The existing CI wheel-test jobs discover these tests as part of
 `python -I -m unittest discover -s tests -v`, so incompatible API changes are
 checked against the installed wheel as well as during local development.
+
+## Publish to GitHub Pages
+
+The `Documentation` workflow (`.github/workflows/docs.yml`) builds and deploys
+this site on every push to `master`. Tags and pushes to other branches do not
+trigger it. The build uses Python 3.13 and installs only the `docs` dependency
+group from `pyproject.toml`; it does not install the library or compile Rust.
+Dependencies are resolved at build time, without requiring a tracked `uv.lock`.
+
+Before the first deployment,
+[configure the pages to be published with a custom GitHub Actions workflow](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-with-a-custom-github-actions-workflow).
+Also, the workflow uses
+[a deployment environment](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/control-deployments#using-environments)
+called `github-pages`. If the `github-pages` environment has deployment branch
+restrictions, allow `master`.

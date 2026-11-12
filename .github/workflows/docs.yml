@@ -1,0 +1,56 @@
+name: Documentation
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+# Queue the newest push without interrupting an active Pages deployment.
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@v7
+      - name: Configure Pages
+        id: pages
+        uses: actions/configure-pages@v5
+      - name: Install documentation dependencies
+        run: |
+          uv venv --python 3.13 .venv-docs
+          uv pip install --python .venv-docs/bin/python --group docs
+      - name: Build documentation
+        env:
+          MKDOCS_SITE_URL: ${{ steps.pages.outputs.base_url }}/
+        run: .venv-docs/bin/mkdocs build --strict
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

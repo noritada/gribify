@@ -1,4 +1,5 @@
 site_name: gribify
+site_url: !ENV [MKDOCS_SITE_URL, ""]
 site_description: Generate GRIB2 data from Python
 use_directory_urls: false
 nav:
