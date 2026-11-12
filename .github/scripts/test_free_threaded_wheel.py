@@ -11,8 +11,20 @@ def main():
     parser.add_argument("wheel_dir", nargs="?", type=Path, default=Path("dist"))
     parser.add_argument("--gil-enabled", action="store_true")
     args = parser.parse_args()
-    assert bool(sysconfig.get_config_var("Py_GIL_DISABLED")) == (not args.gil_enabled)
-    assert sys._is_gil_enabled() == args.gil_enabled, "Unexpected initial GIL state"
+    gil_disabled = sysconfig.get_config_var("Py_GIL_DISABLED")
+    gil_enabled = sys._is_gil_enabled()
+    print(
+        f"Python executable: {sys.executable}\n"
+        f"Python version: {sys.version}\n"
+        f"Py_GIL_DISABLED: {gil_disabled!r}\n"
+        f"GIL enabled: {gil_enabled}",
+        flush=True,
+    )
+    assert bool(gil_disabled) == (not args.gil_enabled), (
+        f"Expected a {'GIL-enabled' if args.gil_enabled else 'free-threaded'} "
+        f"Python build; Py_GIL_DISABLED={gil_disabled!r}"
+    )
+    assert gil_enabled == args.gil_enabled, "Unexpected initial GIL state"
     version = f"{sys.version_info.major}{sys.version_info.minor}"
     if sys.version_info >= (3, 15):
         # maturin emits the compressed abi3.abi3t tag for a wheel usable by

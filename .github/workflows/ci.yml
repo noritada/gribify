@@ -309,15 +309,23 @@ jobs:
             "$BUILD_CONTAINER" "$TEST_PYTHON" -I .github/scripts/test_free_threaded_wheel.py
       - name: Test free-threaded wheel (native runner)
         if: ${{ !startsWith(matrix.platform.name, 'musllinux-') }}
-        run: python -I .github/scripts/test_free_threaded_wheel.py
+        shell: bash
+        env:
+          # Keep using the selected interpreter even if the build changes PATH.
+          TEST_PYTHON: ${{ steps.python.outputs.python-path }}
+        run: '"$TEST_PYTHON" -I .github/scripts/test_free_threaded_wheel.py'
       - uses: actions/setup-python@v7
         if: ${{ matrix.python == '3.15' && !startsWith(matrix.platform.name, 'musllinux-') }}
+        id: python-gil
         with:
           python-version: "3.15"
           architecture: ${{ matrix.platform.python_arch }}
       - name: Test the same abi3t wheel with the GIL (native runner)
         if: ${{ matrix.python == '3.15' && !startsWith(matrix.platform.name, 'musllinux-') }}
-        run: python -I .github/scripts/test_free_threaded_wheel.py --gil-enabled
+        shell: bash
+        env:
+          TEST_PYTHON: ${{ steps.python-gil.outputs.python-path }}
+        run: '"$TEST_PYTHON" -I .github/scripts/test_free_threaded_wheel.py --gil-enabled'
       - name: Test the same abi3t wheel with the GIL (musllinux container)
         if: matrix.python == '3.15' && startsWith(matrix.platform.name, 'musllinux-')
         env:
