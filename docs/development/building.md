@@ -98,6 +98,21 @@ python -m unittest discover -s tests -v
 The tests use the standard-library `unittest` runner and NumPy; no separate test
 runner installation is required.
 
+The suite also executes every top-level `examples/*.py` script in a fresh
+Python process and temporary working directory. New scripts in that directory
+are included automatically. A nonzero exit status or a timeout fails the test;
+failures identify the script and include its error output. The existing examples
+also have output checks, including GRIB2 framing for `app.py`'s binary stdout.
+
+To run only these script checks:
+
+```sh
+python -I -m unittest discover -s tests -p test_examples.py -v
+```
+
+These checks are included in the existing CI wheel-test jobs through unittest
+discovery. Tests for code blocks in `docs/examples.md` remain separate.
+
 ## Build a wheel
 
 To build an optimized wheel for the current platform without installing it:

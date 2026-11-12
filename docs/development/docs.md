@@ -45,3 +45,29 @@ The [BSD-3-Clause license](../assets/vendor/highlightjs/LICENSE) and
 [source URLs and checksums](../assets/vendor/highlightjs/README.txt) are included
 in both the repository and the generated site. When updating the assets,
 update the JavaScript and CSS together and preserve the accompanying license.
+
+## Verify the usage examples
+
+With the library built and installed in your Python environment, run:
+
+```sh
+python -I -m unittest discover -s tests -p test_doc_examples.py -v
+```
+
+These tests read the fenced `python` code blocks directly from
+`docs/examples.md`. They execute the first example independently, each later
+example with only its documented prerequisite, and all examples in page order.
+Each run uses a fresh Python process and a temporary output directory. The tests
+check the generated GRIB2 files and selected metadata, including template
+numbers, forecast times, ensemble membership, and accumulation intervals.
+They do not decode and compare every packed data value.
+
+Keep executable examples in triple-backtick `python` blocks, one per level-two
+heading. When adding or renaming an example, update the heading coverage,
+prerequisites, and expected outputs in `tests/test_doc_examples.py`. Keep the
+example code in the Markdown file; do not copy it into the tests. Python errors
+report the Markdown filename and original line number.
+
+The existing CI wheel-test jobs discover these tests as part of
+`python -I -m unittest discover -s tests -v`, so incompatible API changes are
+checked against the installed wheel as well as during local development.
