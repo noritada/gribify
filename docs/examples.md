@@ -1,14 +1,16 @@
 # Examples
 
 These examples show how to describe three kinds of forecast data and write them
-to GRIB2 files. Use the [API reference](api.md) for argument definitions, numeric
-ranges, missing-value representations, and exceptions.
+to GRIB2 files. In the examples below, we are generating forecast data, but it
+is also possible to generate analysis data. Use the [API reference](api.md) for
+argument definitions, numeric ranges, missing-value representations, and
+exceptions.
 
 ## Choose a template
 
 | What you want to write | Template | Example |
 | --- | --- | --- |
-| A field at one forecast time | [Template4_0](api.md#gribify.Template4_0) | [2 m temperature](#temperature-at-a-single-forecast-time) |
+| An analysis or forecast field at a single time | [Template4_0](api.md#gribify.Template4_0) | [2 m temperature](#temperature-at-a-single-forecast-time) |
 | One ensemble member at one forecast time | [Template4_1](api.md#gribify.Template4_1) | [Perturbed temperature forecast](#an-ensemble-member) |
 | An accumulation or other statistic over a time interval | [Template4_8](api.md#gribify.Template4_8) | [Six-hour precipitation](#six-hour-accumulated-precipitation) |
 
@@ -94,6 +96,13 @@ The choices that connect the data to its metadata are:
 - `unit=1, time=6` selects six hours after the reference time: 06:00 UTC.
 - The values have shape `(len(lngs), len(lats))`, here `(4, 3)`.
   `decimal_scale=1` requests packing with one decimal place.
+
+To adapt this example to analysis data, keep `Template4_0` and use the analysis
+time as the reference time with a zero forecast offset (`time=0`). Set the
+identification and generating-process metadata to describe an analysis, and
+supply the analyzed temperature values instead of forecast values. In
+particular, update the forecast-specific settings in the `identification`
+helper as well as `forecast_process`.
 
 For details, see [Identification](api.md#gribify.Identification),
 [FixedSurface](api.md#gribify.param_set.FixedSurface),
