@@ -12,6 +12,7 @@ authors = [
   { name = "Noritada Kobayashi", email = "noritada.kobayashi@gmail.com" },
 ]
 description = "GRIB2 format writer"
+readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE-*"]
 keywords = ["GRIB", "weather", "meteorology", "data format"]
