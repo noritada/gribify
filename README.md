@@ -16,4 +16,7 @@ There are also several methods for compressing the data.
 `gribify` aims to be a simple module specialized in allowing users to configure
 these settings in detail to generate data in the GRIB format.
 
+## Documentation
 
+Documentation of the development version is
+[available on GitHub Pages](https://noritada.github.io/gribify/).
