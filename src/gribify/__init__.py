@@ -44,11 +44,13 @@ def grib2_message(
     lngs : numpy.ndarray
         Python wrapper: nonempty one-dimensional float64 longitude array.
     values : numpy.ndarray or numpy.ma.MaskedArray
-        Grid values. Masked entries and NaNs are encoded as missing values.
+        Grid values indexed by latitude, then longitude. Masked entries and
+        NaNs are encoded as missing values.
 
         Requires a two-dimensional float64 array with shape
-        ``(len(lngs), len(lats))``. Masked entries are filled with NaN,
+        ``(len(lats), len(lngs))``. Masked entries are filled with NaN,
         regardless of ``fill_value``, without modifying the input.
+        Noncontiguous arrays and negative strides are supported.
     packing : {"complex", "simple"}, optional
         Python wrapper: selects complex packing (template 5.2, the default)
         or simple packing (template 5.0).

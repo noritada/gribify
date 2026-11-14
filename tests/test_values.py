@@ -10,14 +10,14 @@ import gribify as g
 
 class ValuesTests(unittest.TestCase):
     def test_values_memory_layout(self):
-        # The API indexes values by (longitude, latitude). Latitude decreases
-        # here, so values[:, 0] is the northernmost row [0, 1, 2, 3].
+        # The API indexes values by (latitude, longitude). Latitude decreases
+        # here, so values[0, :] is the northernmost row [0, 1, 2, 3].
         rows = np.arange(12., dtype=np.float64).reshape(3, 4)
         layouts = (
-            ('latitude-major', rows.ravel().copy(), (8, 32), 0),
-            ('longitude-major', rows.T.copy().ravel(), (24, 8), 0),
-            ('reversed-latitude-major', rows.ravel()[::-1].copy(), (-8, -32), 88),
-            ('reversed-longitude-major', rows.T.copy().ravel()[::-1].copy(), (-24, -8), 88),
+            ('latitude-major', rows.ravel().copy(), (32, 8), 0),
+            ('longitude-major', rows.T.copy().ravel(), (8, 24), 0),
+            ('reversed-latitude-major', rows.ravel()[::-1].copy(), (-32, -8), 88),
+            ('reversed-longitude-major', rows.T.copy().ravel()[::-1].copy(), (-8, -24), 88),
         )
         ident = g.Identification(0, 0, 29, 0, 0, datetime(2026, 1, 1), 0, 0)
         product = bytes.fromhex(
@@ -29,9 +29,9 @@ class ValuesTests(unittest.TestCase):
             messages = []
             for name, storage, strides, offset in layouts:
                 with self.subTest(packing=packing, layout=name):
-                    values = np.ndarray((4, 3), dtype=np.float64,
+                    values = np.ndarray((3, 4), dtype=np.float64,
                                         buffer=storage, offset=offset, strides=strides)
-                    np.testing.assert_array_equal(values, rows.T)
+                    np.testing.assert_array_equal(values, rows)
                     self.assertTrue(np.shares_memory(values, storage))
                     message = g.grib2_message(
                         0, ident, product, lats, lngs, values,
@@ -76,7 +76,7 @@ class ValuesTests(unittest.TestCase):
         np.testing.assert_array_equal(np.ma.getmaskarray(values), original_mask)
 
         # Check the actual GRIB2 bitmap, including pre-existing NaNs.
-        present = ~np.isnan(expected.ravel(order='F'))
+        present = ~np.isnan(expected.ravel())
         pos = 16
         while pos < len(message) - 4:
             length = int.from_bytes(message[pos:pos + 4], 'big')
@@ -92,10 +92,10 @@ class ValuesTests(unittest.TestCase):
             self.fail('Section 6 missing')
 
     def test_partial_mask_and_nan(self):
-        data = np.arange(12.).reshape(4, 3)
+        data = np.arange(12.).reshape(3, 4)
         data[1, 1] = np.nan
-        mask = np.zeros((4, 3), dtype=bool)
-        mask[0, 1] = mask[3, 2] = True
+        mask = np.zeros((3, 4), dtype=bool)
+        mask[0, 1] = mask[2, 3] = True
         values = np.ma.array(data, mask=mask, fill_value=-9999, hard_mask=True)
         values.data.flags.writeable = False
         self.check_masked(values)
@@ -105,10 +105,10 @@ class ValuesTests(unittest.TestCase):
     def test_scalar_masks(self):
         for mask in (np.ma.nomask, False, True):
             with self.subTest(mask=mask):
-                self.check_masked(np.ma.array(np.arange(12.).reshape(4, 3), mask=mask))
+                self.check_masked(np.ma.array(np.arange(12.).reshape(3, 4), mask=mask))
 
     def test_noncontiguous(self):
-        values = np.ma.array(np.arange(24.).reshape(4, 6), mask=False)
+        values = np.ma.array(np.arange(24.).reshape(3, 8), mask=False)
         values[2, 2] = np.ma.masked
         self.check_masked(values[:, ::2])
 
@@ -127,7 +127,7 @@ class ValuesTests(unittest.TestCase):
         return sections
 
     def test_packing_selection(self):
-        values = np.arange(12.).reshape(4, 3)
+        values = np.arange(12.).reshape(3, 4)
         default = self.encode(values, decimal_scale=1)
         self.assertEqual(default, self.encode(values, packing="complex", decimal_scale=1))
         for packing, template in (("simple", 0), ("complex", 2)):
@@ -138,8 +138,8 @@ class ValuesTests(unittest.TestCase):
 
     def test_simple_values(self):
         for scale in (-1, 0, 1, 2, 3):
-            for values in (np.linspace(-1.5, 1.8, 12).reshape(4, 3),
-                           np.full((4, 3), 2.5)):
+            for values in (np.linspace(-1.5, 1.8, 12).reshape(3, 4),
+                           np.full((3, 4), 2.5)):
                 with self.subTest(constant=bool(values.min() == values.max())):
                     sections = self.sections(self.encode(values, packing="simple", decimal_scale=scale))
                     section5 = sections[5]
@@ -157,10 +157,10 @@ class ValuesTests(unittest.TestCase):
                     codes = [int(bits[i * width:(i + 1) * width], 2)
                              if width else 0 for i in range(12)]
                     decoded = (reference + np.array(codes) * 2. ** binary_scale) * 10. ** -decimal_scale
-                    np.testing.assert_allclose(decoded, values.ravel(order='F'), atol=0.5 * 10. ** -scale, rtol=0)
+                    np.testing.assert_allclose(decoded, values.ravel(), atol=0.5 * 10. ** -scale, rtol=0)
 
     def test_decimal_scale(self):
-        values = np.arange(12.).reshape(4, 3) / 8
+        values = np.arange(12.).reshape(3, 4) / 8
         for packing in ("simple", "complex"):
             for scale in (-2, 0, 2, 3):
                 with self.subTest(packing=packing, scale=scale):
@@ -185,7 +185,7 @@ class ValuesTests(unittest.TestCase):
 
         ident = g.Identification(0, 0, 29, 0, 0, datetime(2026, 1, 1), 0, 0)
         args = (0, ident, b'', np.arange(3.), np.arange(4.),
-                np.arange(12.).reshape(4, 3))
+                np.arange(12.).reshape(3, 4))
         for encode in (g.grib2_message, native_encode):
             for packing in ("simple", "complex"):
                 with self.subTest(encode=encode, packing=packing):
@@ -193,7 +193,7 @@ class ValuesTests(unittest.TestCase):
                         encode(*args, packing=packing)
 
     def test_invalid_packing(self):
-        values = np.arange(12.).reshape(4, 3)
+        values = np.arange(12.).reshape(3, 4)
         for packing in ("", "Simple", "jpeg"):
             with self.subTest(packing=packing):
                 with self.assertRaisesRegex(ValueError, "packing must be"):
@@ -205,7 +205,7 @@ class ValuesTests(unittest.TestCase):
 
     def test_shape_validation(self):
         with self.assertRaisesRegex(RuntimeError, 'shape mismatch'):
-            self.encode(np.ma.array(np.arange(12.).reshape(3, 4), mask=True), decimal_scale=1)
+            self.encode(np.ma.array(np.arange(12.).reshape(4, 3), mask=True), decimal_scale=1)
 
 
 if __name__ == '__main__':

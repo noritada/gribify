@@ -53,19 +53,19 @@ mod gribify {
         let grid = super::LatLngGridDef::try_from((lats, lngs))?;
         let value_view = values.as_array();
         let value_shape = value_view.shape();
-        if value_shape[0] != grid.ni() || value_shape[1] != grid.nj() {
+        if value_shape[0] != grid.nj() || value_shape[1] != grid.ni() {
             return Err(PyRuntimeError::new_err(format!(
-                "shape mismatch: lng/lat grid = ({}, {}), value grid = ({}, {})",
-                grid.ni(),
+                "shape mismatch: lat/lng grid = ({}, {}), value grid = ({}, {})",
                 grid.nj(),
+                grid.ni(),
                 value_shape[0],
                 value_shape[1]
             )));
         }
         // Section 3 specifies consecutive longitudes (i_consecutive).
-        // Python axes are (longitude, latitude), so traverse the transpose
-        // in logical row-major order, respecting arbitrary input strides.
-        let scan_view = value_view.reversed_axes();
+        // Python axes are (latitude, longitude), so logical row-major
+        // traversal matches the scan order, respecting arbitrary strides.
+        let scan_view = value_view;
         let scan_values = match scan_view.as_slice() {
             Some(slice) => std::borrow::Cow::Borrowed(slice),
             None => std::borrow::Cow::Owned(scan_view.iter().copied().collect()),

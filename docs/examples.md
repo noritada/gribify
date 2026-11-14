@@ -36,7 +36,7 @@ from gribify import param_set as ps
 reference_time = datetime(2026, 1, 1, 0)  # UTC
 lats = np.linspace(30.0, 40.0, 3)
 lngs = np.linspace(130.0, 140.0, 4)
-temperature = np.linspace(280.0, 291.0, 12).reshape(4, 3)  # K
+temperature = np.linspace(280.0, 291.0, 12).reshape(3, 4)  # K
 
 
 def identification(data_type):
@@ -94,7 +94,7 @@ The choices that connect the data to its metadata are:
 - `surface_type=103` and a value of `2` describe the height above ground.
   An absent second surface makes this a level rather than a layer.
 - `unit=1, time=6` selects six hours after the reference time: 06:00 UTC.
-- The values have shape `(len(lngs), len(lats))`, here `(4, 3)`.
+- The values have shape `(len(lats), len(lngs))`, here `(3, 4)`.
   `decimal_scale=1` requests packing with one decimal place.
 
 To adapt this example to analysis data, keep `Template4_0` and use the analysis
@@ -169,7 +169,7 @@ The resulting total precipitation values are in kg m⁻², following the
 [WMO GRIB2 total precipitation definition](https://confluence.ecmwf.int/spaces/S2S/pages/27399606/Total%2Bprecipitation).
 
 ```python
-hourly_precipitation = np.full((6, len(lngs), len(lats)), 0.5)
+hourly_precipitation = np.full((6, len(lats), len(lngs)), 0.5)
 total_precipitation = hourly_precipitation.sum(axis=0)  # 3 kg m^-2 per point.
 
 accumulated_product = gribify.ProductDefinition(gribify.Template4_8(

@@ -91,8 +91,11 @@ def grib2_message(discipline: int, ident: Identification, product: Union[Product
     lngs : numpy.ndarray
         Python wrapper: nonempty one-dimensional float64 longitude array.
     values : numpy.ndarray or numpy.ma.MaskedArray
-        Python wrapper: contiguous two-dimensional float64 data array with
-        shape (len(lngs), len(lats)).
+        Python wrapper: grid values indexed by latitude, then longitude.
+
+        Requires a two-dimensional float64 array with shape
+        (len(lats), len(lngs)). Noncontiguous arrays and negative strides
+        are supported.
 
     packing : {"complex", "simple"}, optional
         Python wrapper: selects complex packing (template 5.2, the default)

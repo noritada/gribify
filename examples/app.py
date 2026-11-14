@@ -9,7 +9,7 @@ import gribify
 def main():
     lats = np.linspace(30.0, 40.0, 3)
     lngs = np.linspace(130.0, 140.0, 4)
-    a = np.arange(12).astype(float).reshape(4, -1)
+    a = np.arange(12).astype(float).reshape(3, -1)
     discipline = 0
     ident = gribify.Identification(
         centre_id=0xFFFF,

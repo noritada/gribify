@@ -20,7 +20,7 @@ class ThreadingTests(unittest.TestCase):
         ))
         lats = np.linspace(30, 40, 3)
         lngs = np.linspace(130, 140, 4)
-        values = np.arange(12., dtype=np.float64).reshape(4, 3)
+        values = np.arange(12., dtype=np.float64).reshape(3, 4)
         values[1, 1] = np.nan
         # Concurrent reads are supported; callers must not mutate or resize
         # input arrays while an encoding operation is using them.
