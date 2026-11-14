@@ -9,6 +9,47 @@ import gribify as g
 
 
 class ValuesTests(unittest.TestCase):
+    def test_values_memory_layout(self):
+        # The API indexes values by (longitude, latitude). Latitude decreases
+        # here, so values[:, 0] is the northernmost row [0, 1, 2, 3].
+        rows = np.arange(12., dtype=np.float64).reshape(3, 4)
+        layouts = (
+            ('latitude-major', rows.ravel().copy(), (8, 32), 0),
+            ('longitude-major', rows.T.copy().ravel(), (24, 8), 0),
+            ('reversed-latitude-major', rows.ravel()[::-1].copy(), (-8, -32), 88),
+            ('reversed-longitude-major', rows.T.copy().ravel()[::-1].copy(), (-24, -8), 88),
+        )
+        ident = g.Identification(0, 0, 29, 0, 0, datetime(2026, 1, 1), 0, 0)
+        product = bytes.fromhex(
+            '00000000ffff0000000000000100000000ffffffffffffffffffffffff'
+        )
+        lats = np.array([40., 35., 30.])
+        lngs = np.array([130., 131., 132., 133.])
+        for packing in ('simple', 'complex'):
+            messages = []
+            for name, storage, strides, offset in layouts:
+                with self.subTest(packing=packing, layout=name):
+                    values = np.ndarray((4, 3), dtype=np.float64,
+                                        buffer=storage, offset=offset, strides=strides)
+                    np.testing.assert_array_equal(values, rows.T)
+                    self.assertTrue(np.shares_memory(values, storage))
+                    message = g.grib2_message(
+                        0, ident, product, lats, lngs, values,
+                        packing=packing, decimal_scale=0,
+                    )
+                    messages.append(message)
+                    self.assertEqual(message, messages[0])
+                    if packing == 'simple':
+                        sections = self.sections(message)
+                        # These exact integers require four bits per value,
+                        # with zero reference and scale factors.
+                        self.assertEqual(sections[5][11:19], bytes(8))
+                        self.assertEqual(sections[5][19], 4)
+                        payload = sections[7][5:]
+                        decoded = [value for byte in payload
+                                   for value in (byte >> 4, byte & 15)]
+                        np.testing.assert_array_equal(decoded, rows.ravel())
+
     def encode(self, values, **kwargs):
         ident = g.Identification(0, 0, 29, 0, 0, datetime(2026, 1, 1), 0, 0)
         product = bytes.fromhex(
@@ -35,7 +76,7 @@ class ValuesTests(unittest.TestCase):
         np.testing.assert_array_equal(np.ma.getmaskarray(values), original_mask)
 
         # Check the actual GRIB2 bitmap, including pre-existing NaNs.
-        present = ~np.isnan(expected.ravel())
+        present = ~np.isnan(expected.ravel(order='F'))
         pos = 16
         while pos < len(message) - 4:
             length = int.from_bytes(message[pos:pos + 4], 'big')
@@ -116,7 +157,7 @@ class ValuesTests(unittest.TestCase):
                     codes = [int(bits[i * width:(i + 1) * width], 2)
                              if width else 0 for i in range(12)]
                     decoded = (reference + np.array(codes) * 2. ** binary_scale) * 10. ** -decimal_scale
-                    np.testing.assert_allclose(decoded, values.ravel(), atol=0.5 * 10. ** -scale, rtol=0)
+                    np.testing.assert_allclose(decoded, values.ravel(order='F'), atol=0.5 * 10. ** -scale, rtol=0)
 
     def test_decimal_scale(self):
         values = np.arange(12.).reshape(4, 3) / 8

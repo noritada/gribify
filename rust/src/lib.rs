@@ -62,10 +62,15 @@ mod gribify {
                 value_shape[1]
             )));
         }
-        let encoded = encoder::GpvEncoder::new(
-            std::borrow::Cow::Borrowed(values.as_slice()?),
-            method,
-        );
+        // Section 3 specifies consecutive longitudes (i_consecutive).
+        // Python axes are (longitude, latitude), so traverse the transpose
+        // in logical row-major order, respecting arbitrary input strides.
+        let scan_view = value_view.reversed_axes();
+        let scan_values = match scan_view.as_slice() {
+            Some(slice) => std::borrow::Cow::Borrowed(slice),
+            None => std::borrow::Cow::Owned(scan_view.iter().copied().collect()),
+        };
+        let encoded = encoder::GpvEncoder::new(scan_values, method);
 
         let product_bytes;
         let product_payload: &[u8] =
