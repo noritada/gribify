@@ -137,3 +137,12 @@ CPython builds. Wheels still target a particular operating system and
 architecture; the CI workflow builds and tests the distribution variants,
 including separate free-threaded Python builds. A local wheel build does not
 produce all of those variants.
+
+## Coordinate round-trip tests
+
+With the extension installed and Cargo available, run
+`python -m unittest discover -s tests/integration` to test memory layouts.
+This builds the `decode_coordinates` Rust example and checks decoded values
+by latitude and longitude for both packing methods. Cargo needs access to
+the dependency sources. The ordinary Python tests remain available with
+`python -m unittest discover -s tests`.

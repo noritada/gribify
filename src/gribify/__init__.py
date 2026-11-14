@@ -51,6 +51,9 @@ def grib2_message(
         ``(len(lats), len(lngs))``. Masked entries are filled with NaN,
         regardless of ``fill_value``, without modifying the input.
         Noncontiguous arrays and negative strides are supported.
+        Dense arrays are encoded in memory order with matching grid scanning
+        metadata; other layouts are copied in C order. Thus equivalent arrays
+        can produce different bytes while preserving values at each coordinate.
     packing : {"complex", "simple"}, optional
         Python wrapper: selects complex packing (template 5.2, the default)
         or simple packing (template 5.0).

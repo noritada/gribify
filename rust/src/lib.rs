@@ -50,7 +50,7 @@ mod gribify {
                 "packing must be 'complex' or 'simple'",
             )),
         };
-        let grid = super::LatLngGridDef::try_from((lats, lngs))?;
+        let mut grid = super::LatLngGridDef::try_from((lats, lngs))?;
         let value_view = values.as_array();
         let value_shape = value_view.shape();
         if value_shape[0] != grid.nj() || value_shape[1] != grid.ni() {
@@ -62,13 +62,21 @@ mod gribify {
                 value_shape[1]
             )));
         }
-        // Section 3 specifies consecutive longitudes (i_consecutive).
-        // Python axes are (latitude, longitude), so logical row-major
-        // traversal matches the scan order, respecting arbitrary strides.
-        let scan_view = value_view;
-        let scan_values = match scan_view.as_slice() {
-            Some(slice) => std::borrow::Cow::Borrowed(slice),
-            None => std::borrow::Cow::Owned(scan_view.iter().copied().collect()),
+        // Borrow dense storage in physical order, including reversed axes.
+        // Describe that order in Section 3 rather than rearranging the values.
+        let scan_values = match value_view.as_slice_memory_order() {
+            Some(slice) => {
+                let strides = value_view.strides();
+                grid.0.i_consecutive = strides[1].unsigned_abs() <= strides[0].unsigned_abs();
+                if strides[0] < 0 {
+                    std::mem::swap(&mut grid.0.first_point.0, &mut grid.0.last_point.0);
+                }
+                if strides[1] < 0 {
+                    std::mem::swap(&mut grid.0.first_point.1, &mut grid.0.last_point.1);
+                }
+                std::borrow::Cow::Borrowed(slice)
+            }
+            None => std::borrow::Cow::Owned(value_view.iter().copied().collect()),
         };
         let encoded = encoder::GpvEncoder::new(scan_values, method);
 
