@@ -12,4 +12,3 @@ crate-type = ["cdylib"]
 grib = { version = "0.20.0", default-features = false }
 pyo3 = { version = "0.30", features = ["experimental-inspect", "abi3-py311"] }
 numpy = "0.30"
-grib-template-helpers = "0.1.4"
