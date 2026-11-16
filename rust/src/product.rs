@@ -1,5 +1,5 @@
 use grib::def::grib2::{
-    ProductDefinitionTemplate, Section4Payload,
+    ProductDefinitionTemplate, Section4Payload, table,
     template::{self, param_set as params},
 };
 use pyo3::{exceptions::PyTypeError, prelude::*};
@@ -26,13 +26,13 @@ impl ProductDefinition {
         };
         Ok(Self(Section4Payload {
             num_coord_values: 0,
-            template_num,
+            template_num: table::ProductDefinitionTemplateNum(template_num),
             template,
         }))
     }
     #[getter]
     fn template_num(&self) -> u16 {
-        self.0.template_num
+        self.0.template_num.0
     }
     fn __repr__(&self) -> String {
         format!("ProductDefinition({:?})", self.0)
@@ -54,11 +54,11 @@ impl Template4_0 {
     ) -> Self {
         Self(template::Template4_0 {
             param: params::ProductParam {
-                category: param.category,
-                num: param.num,
+                category: table::ParamCategory(param.category),
+                num: table::ParamNum(param.num),
             },
             generating_process: params::GeneratingProcess {
-                process_type: generating_process.process_type,
+                process_type: table::GeneratingProcessType(generating_process.process_type),
                 background_process: generating_process.background_process,
                 process_id: generating_process.process_id,
             },
@@ -87,11 +87,11 @@ impl Template4_1 {
     ) -> Self {
         Self(template::Template4_1 {
             param: params::ProductParam {
-                category: param.category,
-                num: param.num,
+                category: table::ParamCategory(param.category),
+                num: table::ParamNum(param.num),
             },
             generating_process: params::GeneratingProcess {
-                process_type: generating_process.process_type,
+                process_type: table::GeneratingProcessType(generating_process.process_type),
                 background_process: generating_process.background_process,
                 process_id: generating_process.process_id,
             },
@@ -121,11 +121,11 @@ impl Template4_8 {
     ) -> Self {
         Self(template::Template4_8 {
             param: params::ProductParam {
-                category: param.category,
-                num: param.num,
+                category: table::ParamCategory(param.category),
+                num: table::ParamNum(param.num),
             },
             generating_process: params::GeneratingProcess {
-                process_type: generating_process.process_type,
+                process_type: table::GeneratingProcessType(generating_process.process_type),
                 background_process: generating_process.background_process,
                 process_id: generating_process.process_id,
             },
@@ -140,7 +140,7 @@ impl Template4_8 {
 }
 #[pymodule(gil_used = false)]
 pub mod param_set {
-    use super::params;
+    use super::{params, table};
     use pyo3::exceptions::PyValueError;
     use pyo3::prelude::*;
     use pyo3::types::PyDateTime;
@@ -203,7 +203,10 @@ pub mod param_set {
             Ok(Self(params::ForecastTime {
                 cutoff_hours,
                 cutoff_minutes,
-                time: params::TimeRange { unit, len: time },
+                time: params::TimeRange {
+                    unit: table::TimeRangeUnit(unit),
+                    len: time,
+                },
             }))
         }
         fn __repr__(&self) -> String {
@@ -225,7 +228,7 @@ pub mod param_set {
                 ));
             }
             Ok(Self(params::FixedSurface {
-                surface_type,
+                surface_type: table::FixedSurfaceType(surface_type),
                 value: params::ScaledValue {
                     scale_factor,
                     scaled_value,
@@ -268,7 +271,7 @@ pub mod param_set {
             num_forecasts: u8,
         ) -> PyResult<Self> {
             Ok(Self(params::EnsembleForecast {
-                ensemble_forecast_type,
+                ensemble_forecast_type: table::EnsembleForecastType(ensemble_forecast_type),
                 perturbation_num,
                 num_forecasts,
             }))
@@ -294,14 +297,14 @@ pub mod param_set {
             time_increment_length: u32,
         ) -> PyResult<Self> {
             Ok(Self(params::StatisticalProcess {
-                statistical_process_type,
-                time_increment_type,
+                statistical_process_type: table::StatisticalProcessType(statistical_process_type),
+                time_increment_type: table::TimeIncrementType(time_increment_type),
                 time_range: params::TimeRange {
-                    unit: time_range_unit,
+                    unit: table::TimeRangeUnit(time_range_unit),
                     len: time_range_length,
                 },
                 time_increment: params::TimeRange {
-                    unit: time_increment_unit,
+                    unit: table::TimeRangeUnit(time_increment_unit),
                     len: time_increment_length,
                 },
             }))

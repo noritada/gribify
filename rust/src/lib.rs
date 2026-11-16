@@ -9,7 +9,7 @@ use pyo3::prelude::*;
 mod gribify {
 
     use grib::{
-        def::grib2::Section1Payload,
+        def::grib2::{Section1Payload, table},
         encoder::{self, WriteGrib2Message},
     };
     use numpy::{PyReadonlyArray1, PyReadonlyArray2};
@@ -46,9 +46,11 @@ mod gribify {
                 encoder::ComplexPackingStrategy::LookAhead(4),
                 encoder::SpatialDifferencingOption::None,
             ),
-            _ => return Err(pyo3::exceptions::PyValueError::new_err(
-                "packing must be 'complex' or 'simple'",
-            )),
+            _ => {
+                return Err(pyo3::exceptions::PyValueError::new_err(
+                    "packing must be 'complex' or 'simple'",
+                ));
+            }
         };
         let mut grid = super::LatLngGridDef::try_from((lats, lngs))?;
         let value_view = values.as_array();
@@ -139,14 +141,14 @@ mod gribify {
                 second: ref_time.getattr("second")?.extract::<u8>()?,
             };
             Ok(Self(Section1Payload {
-                centre_id,
-                subcentre_id,
-                master_table_version,
-                local_table_version,
-                ref_time_significance,
+                centre_id: table::CentreId(centre_id),
+                subcentre_id: table::SubcentreId(subcentre_id),
+                master_table_version: table::MasterTableVer(master_table_version),
+                local_table_version: table::LocalTableVer(local_table_version),
+                ref_time_significance: table::RefTimeSignificance(ref_time_significance),
                 ref_time,
-                prod_status,
-                data_type,
+                prod_status: table::ProductionStatus(prod_status),
+                data_type: table::ProcessedDataType(data_type),
                 optional: None,
             }))
         }
@@ -174,12 +176,12 @@ impl LatLngGridDef {
             grid_def_source: 0,
             num_points: self.num_points() as u32,
             num_point_list_octets: 0,
-            point_list_interpretation: 0,
-            template_num: 0,
+            point_list_interpretation: grib::def::grib2::table::PointListInterpretation(0),
+            template_num: grib::def::grib2::table::GridDefinitionTemplateNum(0),
             template: grib::def::grib2::GridDefinitionTemplate::_3_0(
                 grib::def::grib2::template::Template3_0 {
                     earth: grib::def::grib2::template::param_set::EarthShape {
-                        shape: 6,
+                        shape: grib::def::grib2::table::EarthShapeType(6),
                         spherical_earth_radius:
                             grib::def::grib2::template::param_set::ScaledValue {
                                 scale_factor: 0xff,

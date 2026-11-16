@@ -72,6 +72,10 @@ def grib2_message(
         units, and -1 selects tens. This controls the encoder's scaling,
         rather than applying Python's round function to the input. Actual
         precision also depends on the data range and binary packing scale.
+        Backend behavior: for constant fields encoded with simple packing and
+        zero bits per value, the stored decimal scale is zero regardless of
+        this argument, and the reference value stores the original constant
+        as an IEEE 32-bit floating-point value.
         -32768 raises ValueError; values outside the signed 16-bit Python-to-Rust
         conversion range raise OverflowError. Non-integer values raise TypeError.
 

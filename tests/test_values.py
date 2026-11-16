@@ -135,7 +135,10 @@ class ValuesTests(unittest.TestCase):
 
                     binary_scale = signed(section5[15:17])
                     decimal_scale = signed(section5[17:19])
-                    self.assertEqual(decimal_scale, scale)
+                    self.assertEqual(decimal_scale, 0 if values.min() == values.max() else scale)
+                    if values.min() == values.max():
+                        self.assertEqual(section5[19], 0)
+                        self.assertEqual(reference, 2.5)
                     width = section5[19]
                     bits = ''.join(f'{byte:08b}' for byte in sections[7][5:])
                     codes = [int(bits[i * width:(i + 1) * width], 2)
