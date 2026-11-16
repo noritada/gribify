@@ -220,8 +220,8 @@ impl<'py> TryFrom<(PyReadonlyArray1<'py, f64>, PyReadonlyArray1<'py, f64>)> for 
         value: (PyReadonlyArray1<'py, f64>, PyReadonlyArray1<'py, f64>),
     ) -> Result<Self, Self::Error> {
         let (lats, lngs) = value;
-        let ni = lngs.len()? as usize;
-        let nj = lats.len()? as usize;
+        let ni = lngs.len()?;
+        let nj = lats.len()?;
         let lats_arr = lats.as_array();
         let lngs_arr = lngs.as_array();
 
