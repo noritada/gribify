@@ -95,6 +95,31 @@ class ValuesTests(unittest.TestCase):
                 self.assertEqual(int.from_bytes(sections[5][9:11], 'big'), template)
                 self.assertEqual(int.from_bytes(sections[5][5:9], 'big'), 12)
 
+    def test_coordinate_rounding(self):
+        ident = g.Identification(0, 0, 29, 0, 0, datetime(2026, 1, 1), 0, 0)
+        product = bytes.fromhex(
+            '00000000ffff0000000000000100000000ffffffffffffffffffffffff')
+        # Float32 coordinates promoted to float64 retain small representation
+        # errors. Section 3 must round them to the nearest microdegree.
+        for dtype in (np.float32, np.float64):
+            lats = np.array([-7.2, 7.2], dtype=dtype).astype(np.float64)
+            lngs = np.array([7.2, 8.2], dtype=dtype).astype(np.float64)
+            for packing in ('simple', 'complex'):
+                with self.subTest(dtype=dtype, packing=packing):
+                    message = g.grib2_message(
+                        0, ident, product, lats, lngs,
+                        np.arange(4.).reshape(2, 2),
+                        packing=packing, decimal_scale=0)
+                    section3 = self.sections(message)[3]
+                    # Negative latitudes use GRIB sign-magnitude encoding.
+                    expected = {46: 0x80000000 | 7_200_000, 50: 7_200_000,
+                                55: 7_200_000, 59: 8_200_000,
+                                63: 1_000_000, 67: 14_400_000}
+                    for offset, value in expected.items():
+                        self.assertEqual(
+                            int.from_bytes(section3[offset:offset + 4], 'big'),
+                            value, f'Section 3 octets {offset + 1}-{offset + 4}')
+
     def test_simple_values(self):
         for scale in (-1, 0, 1, 2, 3):
             for values in (np.linspace(-1.5, 1.8, 12).reshape(3, 4),

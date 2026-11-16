@@ -9,6 +9,6 @@ name = "_gribify"
 crate-type = ["cdylib"]
 
 [dependencies]
-grib = { version = "0.20.0", default-features = false }
+grib = { version = "0.20.4", default-features = false }
 pyo3 = { version = "0.30", features = ["experimental-inspect", "abi3-py311"] }
 numpy = "0.30"
