@@ -362,17 +362,18 @@ jobs:
           name: wheels-sdist
           path: dist
 
-  release:
-    name: Release
+  release-testpypi:
+    name: Publish to TestPyPI
     runs-on: ubuntu-latest
-    if: ${{ startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/gribify
     needs: [linux, musllinux, windows, macos, sdist, test-wheels, free-threaded]
     permissions:
-      # Use to sign the release artifacts
+      contents: read
+      # Used for Trusted Publishing and artifact attestation
       id-token: write
-      # Used to upload release artifacts
-      contents: write
-      # Used to generate artifact attestation
       attestations: write
     steps:
       - uses: actions/download-artifact@v8
@@ -381,10 +382,34 @@ jobs:
         with:
           subject-path: 'wheels-*/*'
       - name: Install uv
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        uses: astral-sh/setup-uv@v10.3.3
+      - name: Publish to TestPyPI
+        run: >-
+          uv publish
+          --trusted-publishing always
+          --publish-url https://test.pypi.org/legacy/
+          'wheels-*/*'
+
+  release-pypi:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
+    environment:
+      name: pypi
+      url: https://pypi.org/p/gribify
+    needs: [linux, musllinux, windows, macos, sdist, test-wheels, free-threaded]
+    permissions:
+      contents: read
+      # Used for Trusted Publishing and artifact attestation
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@v8
+      - name: Generate artifact attestation
+        uses: actions/attest@v4
+        with:
+          subject-path: 'wheels-*/*'
+      - name: Install uv
         uses: astral-sh/setup-uv@v10.3.3
       - name: Publish to PyPI
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
-        run: uv publish 'wheels-*/*'
-        env:
-          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+        run: uv publish --trusted-publishing always 'wheels-*/*'
