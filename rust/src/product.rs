@@ -143,7 +143,7 @@ pub mod param_set {
     use super::{params, table};
     use pyo3::exceptions::PyValueError;
     use pyo3::prelude::*;
-    use pyo3::types::PyDateTime;
+    use pyo3::types::{PyDateTime, PyString};
 
     #[pyclass(new = "from_fields")]
     #[derive(Debug)]
@@ -187,6 +187,34 @@ pub mod param_set {
         }
     }
 
+    // Code Table 4.4 names are shared by forecast and statistical time ranges.
+    fn parse_time_range_unit(value: &Bound<'_, PyAny>) -> PyResult<table::TimeRangeUnit> {
+        let code = if let Ok(name) = value.cast::<PyString>() {
+            match name.to_str()? {
+                "minute" => 0,
+                "hour" => 1,
+                "day" => 2,
+                "month" => 3,
+                "year" => 4,
+                "decade" | "10 years" => 5,
+                "normal" | "30 years" => 6,
+                "century" | "100 years" => 7,
+                "3 hours" => 10,
+                "6 hours" => 11,
+                "12 hours" => 12,
+                "second" => 13,
+                name => {
+                    return Err(PyValueError::new_err(format!(
+                        "unknown Code Table 4.4 time unit: {name:?}"
+                    )));
+                }
+            }
+        } else {
+            value.extract::<u8>()?
+        };
+        Ok(table::TimeRangeUnit(code))
+    }
+
     /// Data cutoff and signed forecast offset; unit uses Code Table 4.4.
     #[pyclass]
     #[derive(Debug)]
@@ -194,7 +222,12 @@ pub mod param_set {
     #[pymethods]
     impl ForecastTime {
         #[new]
-        fn new(cutoff_hours: u16, cutoff_minutes: u8, unit: u8, time: i32) -> PyResult<Self> {
+        fn new(
+            cutoff_hours: u16,
+            cutoff_minutes: u8,
+            unit: &Bound<'_, PyAny>,
+            time: i32,
+        ) -> PyResult<Self> {
             if time == i32::MIN {
                 return Err(PyValueError::new_err(
                     "time must be between -2147483647 and 2147483647",
@@ -204,7 +237,7 @@ pub mod param_set {
                 cutoff_hours,
                 cutoff_minutes,
                 time: params::TimeRange {
-                    unit: table::TimeRangeUnit(unit),
+                    unit: parse_time_range_unit(unit)?,
                     len: time,
                 },
             }))
@@ -291,20 +324,20 @@ pub mod param_set {
         fn new(
             statistical_process_type: u8,
             time_increment_type: u8,
-            time_range_unit: u8,
+            time_range_unit: &Bound<'_, PyAny>,
             time_range_length: u32,
-            time_increment_unit: u8,
+            time_increment_unit: &Bound<'_, PyAny>,
             time_increment_length: u32,
         ) -> PyResult<Self> {
             Ok(Self(params::StatisticalProcess {
                 statistical_process_type: table::StatisticalProcessType(statistical_process_type),
                 time_increment_type: table::TimeIncrementType(time_increment_type),
                 time_range: params::TimeRange {
-                    unit: table::TimeRangeUnit(time_range_unit),
+                    unit: parse_time_range_unit(time_range_unit)?,
                     len: time_range_length,
                 },
                 time_increment: params::TimeRange {
-                    unit: table::TimeRangeUnit(time_increment_unit),
+                    unit: parse_time_range_unit(time_increment_unit)?,
                     len: time_increment_length,
                 },
             }))

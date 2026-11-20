@@ -140,7 +140,7 @@ class ProductParam:
 class ForecastTime:
     """Python wrapper for grib::def::grib2::template::param_set::ForecastTime.
     """
-    def __new__(cls, cutoff_hours: int, cutoff_minutes: int, unit: int, time: int) -> ForecastTime:
+    def __new__(cls, cutoff_hours: int, cutoff_minutes: int, unit: int | str, time: int) -> ForecastTime:
         """Create ForecastTime.
 
         Parameters
@@ -154,10 +154,12 @@ class ForecastTime:
             Minutes after reference time of data cutoff.
 
             Encoded as an unsigned 8-bit integer. Accepted range: 0 to 255 (inclusive).
-        unit : int
+        unit : int | str
             Indicator of unit of time range (see Code Table 4.4).
 
             Encoded as an unsigned 8-bit integer. Accepted range: 0 to 255 (inclusive).
+            Python wrapper: also accepts the case-sensitive strings in the Code
+            Table 4.4 string table below. Unknown strings raise ValueError.
         time : int
             Forecast time in units defined by octet 18.
 
@@ -166,6 +168,27 @@ class ForecastTime:
 
         Notes
         -----
+        Python wrapper: accepted Code Table 4.4 strings (exact spelling):
+
+        | Code | Strings |
+        | --- | --- |
+        | 0 | `"minute"` |
+        | 1 | `"hour"` |
+        | 2 | `"day"` |
+        | 3 | `"month"` |
+        | 4 | `"year"` |
+        | 5 | `"decade"`, `"10 years"` |
+        | 6 | `"normal"`, `"30 years"` |
+        | 7 | `"century"`, `"100 years"` |
+        | 10 | `"3 hours"` |
+        | 11 | `"6 hours"` |
+        | 12 | `"12 hours"` |
+        | 13 | `"second"` |
+
+        Missing has no string alias; use integer 255. Integer codes retain the
+        unsigned 8-bit accepted range of 0 to 255 (inclusive). Other types raise
+        TypeError; integers outside that range raise OverflowError.
+
         Python wrapper: unit and time correspond to ForecastTime::time.unit and
         ForecastTime::time.len. The descriptions above are the field-specific dump
         documentation from grib. Rust i32::MIN (-2147483648) is rejected because GRIB
@@ -179,7 +202,8 @@ class ForecastTime:
         Raises
         ------
         ValueError
-            If a signed value is the Rust minimum excluded by GRIB sign-magnitude.
+            If unit is an unknown string or time is the Rust minimum excluded by
+            GRIB sign-magnitude.
         OverflowError
             If an integer is outside the underlying Rust integer range.
         """
@@ -298,7 +322,7 @@ class EnsembleForecast:
 class StatisticalProcess:
     """Python wrapper for grib::def::grib2::template::param_set::StatisticalProcess.
     """
-    def __new__(cls, statistical_process_type: int, time_increment_type: int, time_range_unit: int, time_range_length: int, time_increment_unit: int, time_increment_length: int) -> StatisticalProcess:
+    def __new__(cls, statistical_process_type: int, time_increment_type: int, time_range_unit: int | str, time_range_length: int, time_increment_unit: int | str, time_increment_length: int) -> StatisticalProcess:
         """Create StatisticalProcess.
 
         Parameters
@@ -313,22 +337,26 @@ class StatisticalProcess:
             processing (see Code Table 4.11).
 
             Encoded as an unsigned 8-bit integer. Accepted range: 0 to 255 (inclusive).
-        time_range_unit : int
+        time_range_unit : int | str
             Indicator of unit of time for time range over which statistical processing
             is done (see Code Table 4.4).
 
             Encoded as an unsigned 8-bit integer. Accepted range: 0 to 255 (inclusive).
+            Python wrapper: also accepts the case-sensitive strings in the Code
+            Table 4.4 string table below. Unknown strings raise ValueError.
         time_range_length : int
             Length of the time range over which statistical processing is done, in units
             defined by the previous octet.
 
             Encoded as an unsigned 32-bit integer. Accepted range: 0 to 4294967295
             (inclusive).
-        time_increment_unit : int
+        time_increment_unit : int | str
             Indicator of unit of time for the increment between the successive fields
             used (see Code Table 4.4).
 
             Encoded as an unsigned 8-bit integer. Accepted range: 0 to 255 (inclusive).
+            Python wrapper: also accepts the case-sensitive strings in the Code
+            Table 4.4 string table below. Unknown strings raise ValueError.
         time_increment_length : int
             Time increment between successive fields, in units defined by the previous
             octet (see Notes 3 and 4).
@@ -338,6 +366,27 @@ class StatisticalProcess:
 
         Notes
         -----
+        Python wrapper: accepted Code Table 4.4 strings (exact spelling):
+
+        | Code | Strings |
+        | --- | --- |
+        | 0 | `"minute"` |
+        | 1 | `"hour"` |
+        | 2 | `"day"` |
+        | 3 | `"month"` |
+        | 4 | `"year"` |
+        | 5 | `"decade"`, `"10 years"` |
+        | 6 | `"normal"`, `"30 years"` |
+        | 7 | `"century"`, `"100 years"` |
+        | 10 | `"3 hours"` |
+        | 11 | `"6 hours"` |
+        | 12 | `"12 hours"` |
+        | 13 | `"second"` |
+
+        Missing has no string alias; use integer 255. Integer codes retain the
+        unsigned 8-bit accepted range of 0 to 255 (inclusive). Other types raise
+        TypeError; integers outside that range raise OverflowError.
+
         Python wrapper: time_range_unit and time_range_length correspond to
         time_range.unit and time_range.len; time_increment_unit and
         time_increment_length correspond to time_increment.unit and time_increment.len.

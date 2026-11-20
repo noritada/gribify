@@ -10,6 +10,34 @@ The reference below is generated from the Python sources and distributed
 `.pyi` files. Constructor methods are shown explicitly so their typed arguments
 remain visible. Each class also provides `__repr__` for its textual representation.
 
+## Code Table 4.4 string values
+
+`ForecastTime(unit=...)` and `StatisticalProcess(time_range_unit=...,
+time_increment_unit=...)` accept integers or the strings below, based on
+[ECMWF Code Table 4.4](https://codes.ecmwf.int/grib/format/grib2/ctables/4/4/).
+
+| Code | Strings |
+| --- | --- |
+| 0 | `"minute"` |
+| 1 | `"hour"` |
+| 2 | `"day"` |
+| 3 | `"month"` |
+| 4 | `"year"` |
+| 5 | `"decade"`, `"10 years"` |
+| 6 | `"normal"`, `"30 years"` |
+| 7 | `"century"`, `"100 years"` |
+| 10 | `"3 hours"` |
+| 11 | `"6 hours"` |
+| 12 | `"12 hours"` |
+| 13 | `"second"` |
+
+Strings are case-sensitive and must match exactly. For example,
+`param_set.ForecastTime(0, 0, "minute", 30)` is equivalent to
+`param_set.ForecastTime(0, 0, 0, 30)`. Unknown strings raise `ValueError`.
+Missing has no string alias; use `255`. Integer codes still accept 0 to 255
+(inclusive), encoded as unsigned 8-bit integers, including reserved codes.
+Out-of-range integers raise `OverflowError`; other types raise `TypeError`.
+
 ## Message generation
 
 ::: gribify.grib2_message
