@@ -23,21 +23,12 @@ class IdentificationTests(unittest.TestCase):
             np.arange(12.).reshape(3, 4), decimal_scale=1,
         )
 
-    def test_string_values(self):
-        names = {
-            0: 'analysis',
-            1: 'start of forecast',
-            2: 'verifying time of forecast',
-            3: 'observation time',
-            4: 'local time',
-            5: 'simulation start',
-        }
-        for code, name in names.items():
-            with self.subTest(name=name):
-                message = self.encode(name)
-                self.assertEqual(message[20], 1)  # Section 1 follows 16-byte Section 0.
-                self.assertEqual(message[27], code)  # Section 1, octet 12.
-                self.assertEqual(message, self.encode(code))
+    def test_string_value(self):
+        # No aliases: choose the second Code Table 1.2 entry.
+        message = self.encode('start of forecast')
+        self.assertEqual(message[20], 1)  # Section 1 follows 16-byte Section 0.
+        self.assertEqual(message[27], 1)  # Section 1, octet 12.
+        self.assertEqual(message, self.encode(1))
 
     def test_integer_codes_remain_supported(self):
         for code in range(256):

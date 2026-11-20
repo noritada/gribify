@@ -24,25 +24,14 @@ class DisciplineTests(unittest.TestCase):
             lats=self.lats, lngs=self.lngs, values=self.values, decimal_scale=1,
         )
 
-    def test_string_aliases(self):
-        aliases = {
-            0: ('meteorological',),
-            1: ('hydrological',),
-            2: ('land surface',),
-            3: ('satellite remote sensing', 'space'),
-            4: ('space weather',),
-            10: ('oceanographic',),
-            20: ('health and socioeconomic',),
-        }
+    def test_string_alias(self):
+        # Choose one alias of a code with multiple text representations.
         for encoder in (g.grib2_message, native_grib2_message):
-            for code, names in aliases.items():
-                expected = self.encode(code, encoder)
-                for name in names:
-                    with self.subTest(encoder=encoder, name=name):
-                        message = self.encode(name, encoder)
-                        self.assertEqual(message[:4], b'GRIB')
-                        self.assertEqual(message[6], code)  # Section 0, octet 7.
-                        self.assertEqual(message, expected)
+            with self.subTest(encoder=encoder):
+                message = self.encode('space', encoder)
+                self.assertEqual(message[:4], b'GRIB')
+                self.assertEqual(message[6], 3)  # Section 0, octet 7.
+                self.assertEqual(message, self.encode(3, encoder))
 
     def test_integer_codes_remain_supported(self):
         for code in range(256):

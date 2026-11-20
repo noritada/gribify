@@ -66,31 +66,26 @@ class ProductTests(unittest.TestCase):
         self.check_product(g.Template4_8(**self.common(), statistical=statistical), 8, suffix)
 
     def test_code_table_4_4_strings_and_integer_codes(self):
-        aliases = {
-            0: ("minute",), 1: ("hour",), 2: ("day",), 3: ("month",),
-            4: ("year",), 5: ("decade", "10 years"),
-            6: ("normal", "30 years"), 7: ("century", "100 years"),
-            10: ("3 hours",), 11: ("6 hours",), 12: ("12 hours",),
-            13: ("second",),
-        }
-        for code in range(256):
-            for value in (code, *aliases.get(code, ())):
-                with self.subTest(code=code, value=value):
-                    common = self.common()
-                    common['forecast_time'] = ps.ForecastTime(5, 6, value, -12)
-                    forecast = section4(g.ProductDefinition(g.Template4_0(**common)))
-                    self.assertEqual(forecast[17], code)
-                    # Give each statistical unit a different value to check mapping.
-                    for range_unit, increment_unit, expected in (
-                        (value, 255, (code, 255)),
-                        (255, value, (255, code)),
-                    ):
-                        statistical = ps.Statistical(datetime(2026, 1, 1), 0, [
-                            ps.StatisticalProcess(1, 2, range_unit, 6,
-                                                  increment_unit, 3)])
-                        data = section4(g.ProductDefinition(g.Template4_8(
-                            **common, statistical=statistical)))
-                        self.assertEqual((data[48], data[53]), expected)
+        # Keep integer compatibility coverage and one alias of a code with
+        # multiple text representations, as required by Testing instructions.
+        cases = [(code, code) for code in range(256)] + [('10 years', 5)]
+        for value, code in cases:
+            with self.subTest(code=code, value=value):
+                common = self.common()
+                common['forecast_time'] = ps.ForecastTime(5, 6, value, -12)
+                forecast = section4(g.ProductDefinition(g.Template4_0(**common)))
+                self.assertEqual(forecast[17], code)
+                # Give each statistical unit a different value to check mapping.
+                for range_unit, increment_unit, expected in (
+                    (value, 255, (code, 255)),
+                    (255, value, (255, code)),
+                ):
+                    statistical = ps.Statistical(datetime(2026, 1, 1), 0, [
+                        ps.StatisticalProcess(1, 2, range_unit, 6,
+                                              increment_unit, 3)])
+                    data = section4(g.ProductDefinition(g.Template4_8(
+                        **common, statistical=statistical)))
+                    self.assertEqual((data[48], data[53]), expected)
 
     def test_invalid_time_unit_inputs(self):
         constructors = (
