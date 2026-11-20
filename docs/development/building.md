@@ -146,3 +146,48 @@ This builds the `decode_coordinates` Rust example and checks decoded values
 by latitude and longitude for both packing methods. Cargo needs access to
 the dependency sources. The ordinary Python tests remain available with
 `python -m unittest discover -s tests`.
+
+## Code table string aliases
+
+Run these commands from the repository root. The shared definitions live in
+`rust/code_tables.toml`. Each table declares its Code Table number, source URL,
+unsigned encoding width (`bits`: 8, 16, or 32), and entries with a numeric `code`
+and one or more accepted `names`. Names use lowercase ASCII letters, digits,
+spaces, hyphens, underscores, or slashes, without leading or trailing whitespace.
+Keep published aliases when updating definitions to preserve compatibility.
+
+`rust/build.rs` uses the shared `rust/codegen` crate to validate these definitions
+and generate Rust lookup functions in Cargo's `OUT_DIR`. It reruns when the TOML
+changes. Generated Rust files are included by the extension and are not committed.
+No network access is needed by the generator.
+
+After changing definitions, update the committed Markdown tables:
+
+```sh
+cargo xtask codegen
+```
+
+This updates only the regions delimited by `<!-- codegen:NAME:start -->` and
+`<!-- codegen:NAME:end -->` in `docs/api.md` and
+`src/gribify/_gribify/param_set.pyi`, retaining docstring indentation. Semantic
+prose, constraints, signatures, and examples remain hand-maintained. For a new
+Code Table, add its named markers to both files and wire the generated
+`lookup_NAME` function into the appropriate Rust argument conversion. The table
+name must be nonempty and contain only lowercase ASCII letters, digits, and
+underscores. The generated lookup returns `Option<u8>`, `Option<u16>`, or
+`Option<u32>` according to `bits`.
+
+Check generated tables without modifying files, and test the shared generator:
+
+```sh
+cargo xtask codegen --check
+cargo test --manifest-path rust/Cargo.toml -p gribify-codegen --locked
+```
+
+CI runs both commands. Invalid definitions (including duplicate aliases or codes
+and out-of-range codes) fail generation. Missing or malformed document markers
+also fail the documentation update. Keep independent encoding tests in
+`tests/test_product.py` to verify the Code Table values and their GRIB2 octet
+positions; the generator's own tests check validation and document updates.
+After documentation changes, also run the stub syntax checks and
+`mkdocs build --strict` described in the documentation workflow.

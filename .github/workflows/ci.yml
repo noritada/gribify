@@ -19,6 +19,15 @@ permissions:
   contents: read
 
 jobs:
+  codegen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check generated code tables
+        run: cargo xtask codegen --check
+      - name: Test code table generator
+        run: cargo test --manifest-path rust/Cargo.toml -p gribify-codegen --locked
+
   linux:
     runs-on: ${{ matrix.platform.runner }}
     strategy:
