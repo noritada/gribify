@@ -89,6 +89,49 @@ an unsigned 8-bit accepted range of 0 to 255 (inclusive), including reserved cod
 Unknown strings raise `ValueError`, out-of-range integers raise `OverflowError`,
 and other types raise `TypeError`.
 
+## Code Table 4.3 string values
+
+`GeneratingProcess(process_type=...)` and assignment to `process_type` accept
+integer codes or these strings from
+[ECMWF Code Table 4.3](https://codes.ecmwf.int/grib/format/grib2/ctables/4/3/),
+with the first letter of each Meaning changed to lowercase.
+
+<!-- codegen:generating_process_type:start -->
+| Code | Strings |
+| --- | --- |
+| 0 | `"analysis"` |
+| 1 | `"initialization"` |
+| 2 | `"forecast"` |
+| 3 | `"bias corrected forecast"` |
+| 4 | `"ensemble forecast"` |
+| 5 | `"probability forecast"` |
+| 6 | `"forecast error"` |
+| 7 | `"analysis error"` |
+| 8 | `"observation"` |
+| 9 | `"climatological"` |
+| 10 | `"probability-weighted forecast"` |
+| 11 | `"bias-corrected ensemble forecast"` |
+| 12 | `"post-processed analysis"` |
+| 13 | `"post-processed forecast"` |
+| 14 | `"nowcast"` |
+| 15 | `"hindcast"` |
+| 16 | `"physical retrieval"` |
+| 17 | `"regression analysis"` |
+| 18 | `"difference between two forecasts"` |
+| 19 | `"first guess"` |
+| 20 | `"analysis increment"` |
+| 21 | `"initialization increment for analysis"` |
+| 22 | `"blended forecast"` |
+<!-- codegen:generating_process_type:end -->
+
+Strings are case-sensitive and must match exactly, including spaces and hyphens.
+For example, use `process_type="forecast"` in place of `process_type=2`.
+Reading `process_type` returns the integer code even when set using a string.
+Missing has no string alias; integer `255` remains accepted. Integer codes retain
+an unsigned 8-bit accepted range of 0 to 255 (inclusive), including reserved codes.
+Unknown strings raise `ValueError`, out-of-range integers raise `OverflowError`,
+and other types raise `TypeError`.
+
 ## Code Table 4.4 string values
 
 `ForecastTime(unit=...)` and `StatisticalProcess(time_range_unit=...,

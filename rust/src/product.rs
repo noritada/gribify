@@ -163,11 +163,11 @@ pub mod param_set {
         }
     }
 
-    #[pyclass(new = "from_fields")]
+    #[pyclass]
     #[derive(Debug)]
     pub struct GeneratingProcess {
         /// Type of generating process (see Code Table 4.3).
-        #[pyo3(get, set)]
+        #[pyo3(get)]
         pub process_type: u8,
         /// Background generating process identifier (defined by originating centre).
         #[pyo3(get, set)]
@@ -177,8 +177,40 @@ pub mod param_set {
         pub process_id: u8,
     }
 
+    fn parse_generating_process_type(value: &Bound<'_, PyAny>) -> PyResult<u8> {
+        if let Ok(name) = value.cast::<PyString>() {
+            let name = name.to_str()?;
+            crate::code_tables::lookup_generating_process_type(name).ok_or_else(|| {
+                PyValueError::new_err(format!(
+                    "unknown Code Table 4.3 generating process type: {name:?}"
+                ))
+            })
+        } else {
+            value.extract::<u8>()
+        }
+    }
+
     #[pymethods]
     impl GeneratingProcess {
+        #[new]
+        fn new(
+            process_type: &Bound<'_, PyAny>,
+            background_process: u8,
+            process_id: u8,
+        ) -> PyResult<Self> {
+            Ok(Self {
+                process_type: parse_generating_process_type(process_type)?,
+                background_process,
+                process_id,
+            })
+        }
+
+        #[setter]
+        fn set_process_type(&mut self, value: &Bound<'_, PyAny>) -> PyResult<()> {
+            self.process_type = parse_generating_process_type(value)?;
+            Ok(())
+        }
+
         fn __repr__(&self) -> String {
             format!(
                 "GeneratingProcess(process_type={}, background_process={}, process_id={})",

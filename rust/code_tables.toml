@@ -110,6 +110,103 @@ names = ["experimental data"]
 code = 10
 names = ["ML based forecast"]
 
+[tables.generating_process_type]
+number = "4.3"
+source = "https://codes.ecmwf.int/grib/format/grib2/ctables/4/3/"
+bits = 8
+
+[[tables.generating_process_type.entries]]
+code = 0
+names = ["analysis"]
+
+[[tables.generating_process_type.entries]]
+code = 1
+names = ["initialization"]
+
+[[tables.generating_process_type.entries]]
+code = 2
+names = ["forecast"]
+
+[[tables.generating_process_type.entries]]
+code = 3
+names = ["bias corrected forecast"]
+
+[[tables.generating_process_type.entries]]
+code = 4
+names = ["ensemble forecast"]
+
+[[tables.generating_process_type.entries]]
+code = 5
+names = ["probability forecast"]
+
+[[tables.generating_process_type.entries]]
+code = 6
+names = ["forecast error"]
+
+[[tables.generating_process_type.entries]]
+code = 7
+names = ["analysis error"]
+
+[[tables.generating_process_type.entries]]
+code = 8
+names = ["observation"]
+
+[[tables.generating_process_type.entries]]
+code = 9
+names = ["climatological"]
+
+[[tables.generating_process_type.entries]]
+code = 10
+names = ["probability-weighted forecast"]
+
+[[tables.generating_process_type.entries]]
+code = 11
+names = ["bias-corrected ensemble forecast"]
+
+[[tables.generating_process_type.entries]]
+code = 12
+names = ["post-processed analysis"]
+
+[[tables.generating_process_type.entries]]
+code = 13
+names = ["post-processed forecast"]
+
+[[tables.generating_process_type.entries]]
+code = 14
+names = ["nowcast"]
+
+[[tables.generating_process_type.entries]]
+code = 15
+names = ["hindcast"]
+
+[[tables.generating_process_type.entries]]
+code = 16
+names = ["physical retrieval"]
+
+[[tables.generating_process_type.entries]]
+code = 17
+names = ["regression analysis"]
+
+[[tables.generating_process_type.entries]]
+code = 18
+names = ["difference between two forecasts"]
+
+[[tables.generating_process_type.entries]]
+code = 19
+names = ["first guess"]
+
+[[tables.generating_process_type.entries]]
+code = 20
+names = ["analysis increment"]
+
+[[tables.generating_process_type.entries]]
+code = 21
+names = ["initialization increment for analysis"]
+
+[[tables.generating_process_type.entries]]
+code = 22
+names = ["blended forecast"]
+
 [tables.time_range_unit]
 number = "4.4"
 source = "https://codes.ecmwf.int/grib/format/grib2/ctables/4/4/"

@@ -7,15 +7,18 @@ from datetime import datetime
 class GeneratingProcess:
     """Python wrapper for grib::def::grib2::template::param_set::GeneratingProcess.
     """
-    def __new__(cls, /, process_type: int, background_process: int, process_id: int) -> GeneratingProcess:
+    def __new__(cls, /, process_type: int | str, background_process: int, process_id: int) -> GeneratingProcess:
         """Create GeneratingProcess.
 
         Parameters
         ----------
-        process_type : int
+        process_type : int | str
             Type of generating process (see Code Table 4.3).
 
             Encoded as an unsigned 8-bit integer. Accepted range: 0 to 255 (inclusive).
+            Python wrapper: also accepts the exact, case-sensitive strings in the
+            Code Table 4.3 table below. Unknown strings raise ValueError;
+            out-of-range integers raise OverflowError; other types raise TypeError.
         background_process : int
             Background generating process identifier (defined by originating centre).
 
@@ -28,6 +31,39 @@ class GeneratingProcess:
 
         Notes
         -----
+        Python wrapper: accepted Code Table 4.3 strings (exact spelling):
+
+        <!-- codegen:generating_process_type:start -->
+        | Code | Strings |
+        | --- | --- |
+        | 0 | `"analysis"` |
+        | 1 | `"initialization"` |
+        | 2 | `"forecast"` |
+        | 3 | `"bias corrected forecast"` |
+        | 4 | `"ensemble forecast"` |
+        | 5 | `"probability forecast"` |
+        | 6 | `"forecast error"` |
+        | 7 | `"analysis error"` |
+        | 8 | `"observation"` |
+        | 9 | `"climatological"` |
+        | 10 | `"probability-weighted forecast"` |
+        | 11 | `"bias-corrected ensemble forecast"` |
+        | 12 | `"post-processed analysis"` |
+        | 13 | `"post-processed forecast"` |
+        | 14 | `"nowcast"` |
+        | 15 | `"hindcast"` |
+        | 16 | `"physical retrieval"` |
+        | 17 | `"regression analysis"` |
+        | 18 | `"difference between two forecasts"` |
+        | 19 | `"first guess"` |
+        | 20 | `"analysis increment"` |
+        | 21 | `"initialization increment for analysis"` |
+        | 22 | `"blended forecast"` |
+        <!-- codegen:generating_process_type:end -->
+
+        Missing has no string alias; integer 255 remains accepted. The process_type
+        setter accepts the same strings; the getter always returns the integer code.
+
         Numeric ranges describe representable values accepted by the wrapper, including
         reserved or missing-value codes. They do not imply that every value is valid in
         the referenced code table. Code-table and note references are retained from the
@@ -73,10 +109,14 @@ class GeneratingProcess:
         """
         ...
     @process_type.setter
-    def process_type(self, /, value: int) -> None:
+    def process_type(self, /, value: int | str) -> None:
         """Type of generating process (see Code Table 4.3).
 
         Encoded as an unsigned 8-bit integer. Accepted range: 0 to 255 (inclusive).
+        Python wrapper: also accepts the Code Table 4.3 strings listed in the
+        constructor documentation. Unknown strings raise ValueError; out-of-range
+        integers raise OverflowError; other types raise TypeError. Missing has no
+        string alias; integer 255 remains accepted.
         """
         ...
 

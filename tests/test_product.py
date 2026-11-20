@@ -65,6 +65,53 @@ class ProductTests(unittest.TestCase):
         suffix += struct.pack('>BBBIBI', 0, 2, 1, 24, 1, 6)
         self.check_product(g.Template4_8(**self.common(), statistical=statistical), 8, suffix)
 
+    def test_generating_process_string(self):
+        # No aliases: choose the second Code Table 4.3 entry.
+        direct = ps.GeneratingProcess(process_type='initialization',
+                                      background_process=3, process_id=4)
+        assigned = ps.GeneratingProcess(0, 3, 4)
+        assigned.process_type = 'initialization'
+        common = self.common()
+        common['generating_process'] = ps.GeneratingProcess(1, 3, 4)
+        expected = section4(g.ProductDefinition(g.Template4_0(**common)))
+        for process in (direct, assigned):
+            with self.subTest(process=process):
+                self.assertEqual(process.process_type, 1)
+                self.assertIsInstance(process.process_type, int)
+                self.assertEqual((process.background_process, process.process_id), (3, 4))
+                common['generating_process'] = process
+                data = section4(g.ProductDefinition(g.Template4_0(**common)))
+                self.assertEqual(data[11], 1)  # Section 4, octet 12.
+                self.assertEqual(data, expected)
+
+    def test_generating_process_integer_codes(self):
+        process = ps.GeneratingProcess(0, 3, 4)
+        for code in range(256):
+            with self.subTest(code=code):
+                self.assertEqual(ps.GeneratingProcess(code, 3, 4).process_type, code)
+                process.process_type = code
+                self.assertEqual(process.process_type, code)
+
+    def test_invalid_generating_process_inputs(self):
+        process = ps.GeneratingProcess(2, 3, 4)
+        setters = (
+            lambda value: ps.GeneratingProcess(value, 3, 4),
+            lambda value: setattr(process, 'process_type', value),
+        )
+        for setter in setters:
+            for value in ('missing', 'Missing', '', '1', 'Initialization',
+                          ' initialization', 'initialization ', 'unknown'):
+                with self.subTest(value=value), self.assertRaisesRegex(
+                        ValueError, 'Code Table 4.3'):
+                    setter(value)
+            for value in (-1, 256):
+                with self.subTest(value=value), self.assertRaises(OverflowError):
+                    setter(value)
+            for value in (None, 1.0, b'initialization', [], object()):
+                with self.subTest(value=value), self.assertRaises(TypeError):
+                    setter(value)
+        self.assertEqual(process.process_type, 2)  # Failed assignments preserve it.
+
     def test_code_table_4_4_strings_and_integer_codes(self):
         # Keep integer compatibility coverage and one alias of a code with
         # multiple text representations, as required by Testing instructions.
