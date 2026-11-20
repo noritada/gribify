@@ -80,7 +80,7 @@ checksum = "de618a2278e11c9ea1fa93143f47ca876751803e1d8dcf92b20aad96eaef1dd6"
 
 [[package]]
 name = "gribify"
-version = "0.1.0-rc.1"
+version = "0.1.0"
 dependencies = [
  "grib",
  "gribify-codegen",
