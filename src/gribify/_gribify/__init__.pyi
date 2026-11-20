@@ -9,7 +9,7 @@ from . import param_set as param_set
 class Identification:
     """Section 1 - Identification section.
     """
-    def __new__(cls, /, centre_id: int, subcentre_id: int, master_table_version: int, local_table_version: int, ref_time_significance: int | str, ref_time: datetime, prod_status: int, data_type: int | str) -> Identification:
+    def __new__(cls, /, centre_id: int, subcentre_id: int, master_table_version: int, local_table_version: int, ref_time_significance: int | str, ref_time: datetime, prod_status: int | str, data_type: int | str) -> Identification:
         """Create Identification.
 
         Parameters
@@ -51,11 +51,14 @@ class Identification:
             to 255). Python datetime restricts these to valid calendar values (year 1 to
             9999, month 1 to 12, day 1 to 31 as valid for the month, hour 0 to 23,
             minute and second 0 to 59). Microseconds are not encoded.
-        prod_status : int
+        prod_status : int | str
             Production status of processed data in this GRIB message (see Code table
             1.3).
 
             Encoded as an unsigned 8-bit integer. Accepted range: 0 to 255 (inclusive).
+            Python wrapper: also accepts the exact, case-sensitive strings in the
+            Code Table 1.3 table below. Unknown strings raise ValueError;
+            out-of-range integers raise OverflowError; other types raise TypeError.
         data_type : int | str
             Type of processed data in this GRIB message (see Code table 1.4).
 
@@ -80,6 +83,20 @@ class Identification:
         <!-- codegen:ref_time_significance:end -->
 
         Missing has no string alias; integer 255 remains accepted.
+
+        Python wrapper: accepted Code Table 1.3 strings (exact spelling):
+
+        <!-- codegen:production_status:start -->
+        | Code | Strings |
+        | --- | --- |
+        | 0 | `"operational"` |
+        | 1 | `"operational test"` |
+        | 2 | `"research"` |
+        | 3 | `"re-analysis"` |
+        <!-- codegen:production_status:end -->
+
+        Only codes 0 to 3 have string aliases. Missing has no string alias;
+        integer 255 remains accepted.
 
         Python wrapper: accepted Code Table 1.4 strings (exact spelling):
 

@@ -143,7 +143,7 @@ mod gribify {
             local_table_version: u8,
             ref_time_significance: &Bound<'py, PyAny>,
             ref_time: Bound<'py, PyDateTime>,
-            prod_status: u8,
+            prod_status: &Bound<'py, PyAny>,
             data_type: &Bound<'py, PyAny>,
         ) -> PyResult<Self> {
             let ref_time_significance = if let Ok(name) = ref_time_significance.cast::<PyString>() {
@@ -155,6 +155,16 @@ mod gribify {
                 })?
             } else {
                 ref_time_significance.extract::<u8>()?
+            };
+            let prod_status = if let Ok(name) = prod_status.cast::<PyString>() {
+                let name = name.to_str()?;
+                crate::code_tables::lookup_production_status(name).ok_or_else(|| {
+                    pyo3::exceptions::PyValueError::new_err(format!(
+                        "unknown Code Table 1.3 production status: {name:?}"
+                    ))
+                })?
+            } else {
+                prod_status.extract::<u8>()?
             };
             let data_type = if let Ok(name) = data_type.cast::<PyString>() {
                 let name = name.to_str()?;

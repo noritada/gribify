@@ -59,6 +59,28 @@ an unsigned 8-bit accepted range of 0 to 255 (inclusive), including reserved cod
 Unknown strings raise `ValueError`, out-of-range integers raise `OverflowError`,
 and other types raise `TypeError`.
 
+## Code Table 1.3 string values
+
+`Identification(prod_status=...)` accepts integer codes or the following strings
+from [ECMWF Code Table 1.3](https://codes.ecmwf.int/grib/format/grib2/ctables/1/3/).
+The first letter is lowercase, and the trailing `products` is omitted.
+
+<!-- codegen:production_status:start -->
+| Code | Strings |
+| --- | --- |
+| 0 | `"operational"` |
+| 1 | `"operational test"` |
+| 2 | `"research"` |
+| 3 | `"re-analysis"` |
+<!-- codegen:production_status:end -->
+
+Only codes 0 to 3 have string aliases. Strings are case-sensitive and must match
+exactly. For example, use `prod_status="operational test"` in place of
+`prod_status=1`. Missing has no string alias; use integer `255`.
+Integer codes retain an unsigned 8-bit accepted range of 0 to 255 (inclusive),
+including codes without string aliases. Unknown strings raise `ValueError`,
+out-of-range integers raise `OverflowError`, and other types raise `TypeError`.
+
 ## Code Table 1.4 string values
 
 `Identification(data_type=...)` accepts integer codes or these strings, based on
