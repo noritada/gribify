@@ -64,7 +64,7 @@ class IdentificationTests(unittest.TestCase):
         for value in ('missing', 'Missing', '', '1', 'Forecast', ' forecast',
                       'forecast ', 'forecast products',
                       'processed satellite observations',
-                      'processed radar observations', 'ML based forecast',
+                      'processed radar observations', 'ml based forecast',
                       'observation time', 'unknown'):
             with self.subTest(value=value):
                 with self.assertRaisesRegex(ValueError, 'Code Table 1.4'):

@@ -96,7 +96,7 @@ class Identification:
         | 7 | `"processed radar observation"` |
         | 8 | `"event probability"` |
         | 9 | `"experimental data"` |
-        | 10 | `"ml based forecast"` |
+        | 10 | `"ML based forecast"` |
         <!-- codegen:data_type:end -->
 
         Missing has no string alias; integer 255 remains accepted.

@@ -85,11 +85,11 @@ pub fn parse(input: &str) -> Result<Vec<Table>, String> {
                 let alias = value.as_str().ok_or("alias must be a string")?;
                 if alias.is_empty()
                     || alias.trim() != alias
-                    || !alias.bytes().all(|c| {
-                        c.is_ascii_lowercase() || c.is_ascii_digit() || b" -_/".contains(&c)
-                    })
+                    || !alias
+                        .bytes()
+                        .all(|c| c.is_ascii_alphanumeric() || b" -_/".contains(&c))
                 {
-                    return Err(format!("{name}: invalid lowercase alias {alias:?}"));
+                    return Err(format!("{name}: invalid alias {alias:?}"));
                 }
                 if !aliases.insert(alias.to_owned()) {
                     return Err(format!("{name}: duplicate alias {alias:?}"));
@@ -199,7 +199,7 @@ mod tests {
             VALID.replace("code=5", "code=256"),
             VALID.replace("code=5", "code=-1"),
             VALID.replace("'10 years'", "'decade'"),
-            VALID.replace("'decade'", "'Decade'"),
+            VALID.replace("'decade'", "'decade|'"),
             VALID.replace("bits=8", "bits=7"),
             VALID.replace("names=", "typo="),
             format!("{VALID}[[tables.table_example.entries]]\ncode=5\nnames=['year']\n"),
@@ -207,6 +207,14 @@ mod tests {
             assert!(parse(&invalid).is_err(), "{invalid}");
         }
     }
+    #[test]
+    fn preserves_alias_case() {
+        let tables = parse(&VALID.replace("'decade'", "'ML based forecast'")).unwrap();
+        assert_eq!(tables[0].entries[0].1[0], "ML based forecast");
+        assert!(rust(&tables).contains("\"ML based forecast\""));
+        assert!(markdown(&tables[0]).contains("`\"ML based forecast\"`"));
+    }
+
     #[test]
     fn preserves_prose_indentation_and_is_idempotent() {
         let tables = parse(VALID).unwrap();

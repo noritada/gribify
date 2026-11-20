@@ -108,7 +108,7 @@ names = ["experimental data"]
 
 [[tables.data_type.entries]]
 code = 10
-names = ["ml based forecast"]
+names = ["ML based forecast"]
 
 [tables.time_range_unit]
 number = "4.4"

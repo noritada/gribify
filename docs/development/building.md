@@ -152,7 +152,7 @@ the dependency sources. The ordinary Python tests remain available with
 Run these commands from the repository root. The shared definitions live in
 `rust/code_tables.toml`. Each table declares its Code Table number, source URL,
 unsigned encoding width (`bits`: 8, 16, or 32), and entries with a numeric `code`
-and one or more accepted `names`. Names use lowercase ASCII letters, digits,
+and one or more accepted `names`. Names use ASCII letters (preserving case), digits,
 spaces, hyphens, underscores, or slashes, without leading or trailing whitespace.
 Keep published aliases when updating definitions to preserve compatibility.
 
