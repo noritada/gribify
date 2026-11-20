@@ -32,6 +32,35 @@ names = ["oceanographic"]
 code = 20
 names = ["health and socioeconomic"]
 
+[tables.ref_time_significance]
+number = "1.2"
+source = "https://codes.ecmwf.int/grib/format/grib2/ctables/1/2/"
+bits = 8
+
+[[tables.ref_time_significance.entries]]
+code = 0
+names = ["analysis"]
+
+[[tables.ref_time_significance.entries]]
+code = 1
+names = ["start of forecast"]
+
+[[tables.ref_time_significance.entries]]
+code = 2
+names = ["verifying time of forecast"]
+
+[[tables.ref_time_significance.entries]]
+code = 3
+names = ["observation time"]
+
+[[tables.ref_time_significance.entries]]
+code = 4
+names = ["local time"]
+
+[[tables.ref_time_significance.entries]]
+code = 5
+names = ["simulation start"]
+
 [tables.time_range_unit]
 number = "4.4"
 source = "https://codes.ecmwf.int/grib/format/grib2/ctables/4/4/"

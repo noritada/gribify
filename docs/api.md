@@ -35,6 +35,30 @@ an unsigned 8-bit accepted range of 0 to 255 (inclusive), including reserved cod
 Unknown strings raise `ValueError`, out-of-range integers raise `OverflowError`,
 and other types raise `TypeError`.
 
+## Code Table 1.2 string values
+
+`Identification(ref_time_significance=...)` accepts integer codes or these
+strings from [ECMWF Code Table 1.2](https://codes.ecmwf.int/grib/format/grib2/ctables/1/2/),
+with the first letter of each Meaning changed to lowercase.
+
+<!-- codegen:ref_time_significance:start -->
+| Code | Strings |
+| --- | --- |
+| 0 | `"analysis"` |
+| 1 | `"start of forecast"` |
+| 2 | `"verifying time of forecast"` |
+| 3 | `"observation time"` |
+| 4 | `"local time"` |
+| 5 | `"simulation start"` |
+<!-- codegen:ref_time_significance:end -->
+
+Strings are case-sensitive and must match exactly. For example, use
+`ref_time_significance="start of forecast"` in place of `ref_time_significance=1`.
+Missing has no string alias; integer `255` remains accepted. Integer codes retain
+an unsigned 8-bit accepted range of 0 to 255 (inclusive), including reserved codes.
+Unknown strings raise `ValueError`, out-of-range integers raise `OverflowError`,
+and other types raise `TypeError`.
+
 ## Code Table 4.4 string values
 
 `ForecastTime(unit=...)` and `StatisticalProcess(time_range_unit=...,

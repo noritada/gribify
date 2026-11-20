@@ -9,7 +9,7 @@ from . import param_set as param_set
 class Identification:
     """Section 1 - Identification section.
     """
-    def __new__(cls, /, centre_id: int, subcentre_id: int, master_table_version: int, local_table_version: int, ref_time_significance: int, ref_time: datetime, prod_status: int, data_type: int) -> Identification:
+    def __new__(cls, /, centre_id: int, subcentre_id: int, master_table_version: int, local_table_version: int, ref_time_significance: int | str, ref_time: datetime, prod_status: int, data_type: int) -> Identification:
         """Create Identification.
 
         Parameters
@@ -35,10 +35,13 @@ class Identification:
             table 1.1 and Note 2).
 
             Encoded as an unsigned 8-bit integer. Accepted range: 0 to 255 (inclusive).
-        ref_time_significance : int
+        ref_time_significance : int | str
             Significance of reference time (see Code table 1.2).
 
             Encoded as an unsigned 8-bit integer. Accepted range: 0 to 255 (inclusive).
+            Python wrapper: also accepts the exact, case-sensitive strings in the
+            Code Table 1.2 table below. Unknown strings raise ValueError;
+            out-of-range integers raise OverflowError; other types raise TypeError.
         ref_time : datetime
             Reference time of data.
 
@@ -60,6 +63,21 @@ class Identification:
 
         Notes
         -----
+        Python wrapper: accepted Code Table 1.2 strings (exact spelling):
+
+        <!-- codegen:ref_time_significance:start -->
+        | Code | Strings |
+        | --- | --- |
+        | 0 | `"analysis"` |
+        | 1 | `"start of forecast"` |
+        | 2 | `"verifying time of forecast"` |
+        | 3 | `"observation time"` |
+        | 4 | `"local time"` |
+        | 5 | `"simulation start"` |
+        <!-- codegen:ref_time_significance:end -->
+
+        Missing has no string alias; integer 255 remains accepted.
+
         Python wrapper: the optional identification template is not supported.
 
         Numeric ranges describe representable values accepted by the wrapper, including

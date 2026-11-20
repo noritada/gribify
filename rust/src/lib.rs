@@ -141,11 +141,21 @@ mod gribify {
             subcentre_id: u16,
             master_table_version: u8,
             local_table_version: u8,
-            ref_time_significance: u8,
+            ref_time_significance: &Bound<'py, PyAny>,
             ref_time: Bound<'py, PyDateTime>,
             prod_status: u8,
             data_type: u8,
         ) -> PyResult<Self> {
+            let ref_time_significance = if let Ok(name) = ref_time_significance.cast::<PyString>() {
+                let name = name.to_str()?;
+                crate::code_tables::lookup_ref_time_significance(name).ok_or_else(|| {
+                    pyo3::exceptions::PyValueError::new_err(format!(
+                        "unknown Code Table 1.2 reference time significance: {name:?}"
+                    ))
+                })?
+            } else {
+                ref_time_significance.extract::<u8>()?
+            };
             let ref_time = grib::def::grib2::template::param_set::DateTime {
                 year: ref_time.getattr("year")?.extract::<u16>()?,
                 month: ref_time.getattr("month")?.extract::<u8>()?,
