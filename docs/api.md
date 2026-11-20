@@ -59,6 +59,36 @@ an unsigned 8-bit accepted range of 0 to 255 (inclusive), including reserved cod
 Unknown strings raise `ValueError`, out-of-range integers raise `OverflowError`,
 and other types raise `TypeError`.
 
+## Code Table 1.4 string values
+
+`Identification(data_type=...)` accepts integer codes or these strings, based on
+[ECMWF Code Table 1.4](https://codes.ecmwf.int/grib/format/grib2/ctables/1/4/).
+The strings use lowercase letters, omit a trailing `products`, and replace a
+trailing `observations` with `observation`.
+
+<!-- codegen:data_type:start -->
+| Code | Strings |
+| --- | --- |
+| 0 | `"analysis"` |
+| 1 | `"forecast"` |
+| 2 | `"analysis and forecast"` |
+| 3 | `"control forecast"` |
+| 4 | `"perturbed forecast"` |
+| 5 | `"control and perturbed forecast"` |
+| 6 | `"processed satellite observation"` |
+| 7 | `"processed radar observation"` |
+| 8 | `"event probability"` |
+| 9 | `"experimental data"` |
+| 10 | `"ml based forecast"` |
+<!-- codegen:data_type:end -->
+
+Strings are case-sensitive and must match exactly. For example, use
+`data_type="forecast"` in place of `data_type=1`.
+Missing has no string alias; integer `255` remains accepted. Integer codes retain
+an unsigned 8-bit accepted range of 0 to 255 (inclusive), including reserved codes.
+Unknown strings raise `ValueError`, out-of-range integers raise `OverflowError`,
+and other types raise `TypeError`.
+
 ## Code Table 4.4 string values
 
 `ForecastTime(unit=...)` and `StatisticalProcess(time_range_unit=...,

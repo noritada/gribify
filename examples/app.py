@@ -19,7 +19,7 @@ def main():
         ref_time_significance=0,
         ref_time=datetime(2026, 1, 1, 0, 0, 0),
         prod_status=0,
-        data_type=0,
+        data_type="analysis",
     )
     ps = gribify.param_set
     product = gribify.ProductDefinition(

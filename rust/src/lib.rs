@@ -144,7 +144,7 @@ mod gribify {
             ref_time_significance: &Bound<'py, PyAny>,
             ref_time: Bound<'py, PyDateTime>,
             prod_status: u8,
-            data_type: u8,
+            data_type: &Bound<'py, PyAny>,
         ) -> PyResult<Self> {
             let ref_time_significance = if let Ok(name) = ref_time_significance.cast::<PyString>() {
                 let name = name.to_str()?;
@@ -155,6 +155,16 @@ mod gribify {
                 })?
             } else {
                 ref_time_significance.extract::<u8>()?
+            };
+            let data_type = if let Ok(name) = data_type.cast::<PyString>() {
+                let name = name.to_str()?;
+                crate::code_tables::lookup_data_type(name).ok_or_else(|| {
+                    pyo3::exceptions::PyValueError::new_err(format!(
+                        "unknown Code Table 1.4 data type: {name:?}"
+                    ))
+                })?
+            } else {
+                data_type.extract::<u8>()?
             };
             let ref_time = grib::def::grib2::template::param_set::DateTime {
                 year: ref_time.getattr("year")?.extract::<u16>()?,

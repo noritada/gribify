@@ -61,6 +61,55 @@ names = ["local time"]
 code = 5
 names = ["simulation start"]
 
+[tables.data_type]
+number = "1.4"
+source = "https://codes.ecmwf.int/grib/format/grib2/ctables/1/4/"
+bits = 8
+
+[[tables.data_type.entries]]
+code = 0
+names = ["analysis"]
+
+[[tables.data_type.entries]]
+code = 1
+names = ["forecast"]
+
+[[tables.data_type.entries]]
+code = 2
+names = ["analysis and forecast"]
+
+[[tables.data_type.entries]]
+code = 3
+names = ["control forecast"]
+
+[[tables.data_type.entries]]
+code = 4
+names = ["perturbed forecast"]
+
+[[tables.data_type.entries]]
+code = 5
+names = ["control and perturbed forecast"]
+
+[[tables.data_type.entries]]
+code = 6
+names = ["processed satellite observation"]
+
+[[tables.data_type.entries]]
+code = 7
+names = ["processed radar observation"]
+
+[[tables.data_type.entries]]
+code = 8
+names = ["event probability"]
+
+[[tables.data_type.entries]]
+code = 9
+names = ["experimental data"]
+
+[[tables.data_type.entries]]
+code = 10
+names = ["ml based forecast"]
+
 [tables.time_range_unit]
 number = "4.4"
 source = "https://codes.ecmwf.int/grib/format/grib2/ctables/4/4/"

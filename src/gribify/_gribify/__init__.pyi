@@ -9,7 +9,7 @@ from . import param_set as param_set
 class Identification:
     """Section 1 - Identification section.
     """
-    def __new__(cls, /, centre_id: int, subcentre_id: int, master_table_version: int, local_table_version: int, ref_time_significance: int | str, ref_time: datetime, prod_status: int, data_type: int) -> Identification:
+    def __new__(cls, /, centre_id: int, subcentre_id: int, master_table_version: int, local_table_version: int, ref_time_significance: int | str, ref_time: datetime, prod_status: int, data_type: int | str) -> Identification:
         """Create Identification.
 
         Parameters
@@ -56,10 +56,13 @@ class Identification:
             1.3).
 
             Encoded as an unsigned 8-bit integer. Accepted range: 0 to 255 (inclusive).
-        data_type : int
+        data_type : int | str
             Type of processed data in this GRIB message (see Code table 1.4).
 
             Encoded as an unsigned 8-bit integer. Accepted range: 0 to 255 (inclusive).
+            Python wrapper: also accepts the exact, case-sensitive strings in the
+            Code Table 1.4 table below. Unknown strings raise ValueError;
+            out-of-range integers raise OverflowError; other types raise TypeError.
 
         Notes
         -----
@@ -75,6 +78,26 @@ class Identification:
         | 4 | `"local time"` |
         | 5 | `"simulation start"` |
         <!-- codegen:ref_time_significance:end -->
+
+        Missing has no string alias; integer 255 remains accepted.
+
+        Python wrapper: accepted Code Table 1.4 strings (exact spelling):
+
+        <!-- codegen:data_type:start -->
+        | Code | Strings |
+        | --- | --- |
+        | 0 | `"analysis"` |
+        | 1 | `"forecast"` |
+        | 2 | `"analysis and forecast"` |
+        | 3 | `"control forecast"` |
+        | 4 | `"perturbed forecast"` |
+        | 5 | `"control and perturbed forecast"` |
+        | 6 | `"processed satellite observation"` |
+        | 7 | `"processed radar observation"` |
+        | 8 | `"event probability"` |
+        | 9 | `"experimental data"` |
+        | 10 | `"ml based forecast"` |
+        <!-- codegen:data_type:end -->
 
         Missing has no string alias; integer 255 remains accepted.
 
