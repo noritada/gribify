@@ -153,6 +153,46 @@ class ProductTests(unittest.TestCase):
                 with self.subTest(value=value), self.assertRaises(TypeError):
                     constructor(value)
 
+    def test_fixed_surface_string(self):
+        # Choose the second supported Code Table 4.5 entry.
+        surface = ps.FixedSurface(surface_type='entire atmosphere',
+                                  scale_factor=0, scaled_value=0)
+        for first in (True, False):
+            with self.subTest(first=first):
+                common = self.common()
+                other = ps.FixedSurface(255, -127, -2147483647)
+                common['horizontal'] = ps.Horizontal(
+                    surface if first else other, other if first else surface)
+                data = section4(g.ProductDefinition(g.Template4_0(**common)))
+                self.assertEqual(data[22 if first else 28], 10)
+                numeric = ps.FixedSurface(10, 0, 0)
+                common['horizontal'] = ps.Horizontal(
+                    numeric if first else other, other if first else numeric)
+                self.assertEqual(data, section4(g.ProductDefinition(g.Template4_0(**common))))
+
+    def test_fixed_surface_integer_codes(self):
+        common = self.common()
+        for code in range(256):
+            with self.subTest(code=code):
+                common['horizontal'] = ps.Horizontal(
+                    ps.FixedSurface(code, 0, 0), ps.FixedSurface(255, -127, -2147483647))
+                data = section4(g.ProductDefinition(g.Template4_0(**common)))
+                self.assertEqual(data[22], code)
+
+    def test_invalid_fixed_surface_type_inputs(self):
+        for value in ('missing', 'Missing', '', '10', 'Entire atmosphere',
+                      ' entire atmosphere', 'entire atmosphere ',
+                      'entire atmosphere (-)', 'isobaric surface (Pa)',
+                      'cloud base level', 'sigma level', 'unknown'):
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, 'Code Table 4.5'):
+                ps.FixedSurface(value, 0, 0)
+        for value in (-1, 256):
+            with self.subTest(value=value), self.assertRaises(OverflowError):
+                ps.FixedSurface(value, 0, 0)
+        for value in (None, 1.0, b'entire atmosphere', [], object()):
+            with self.subTest(value=value), self.assertRaises(TypeError):
+                ps.FixedSurface(value, 0, 0)
+
     def test_original_payload(self):
         payload = bytes.fromhex('00000000ffff0000000000000100000000ffffffffffffffffffffffff')
         common = dict(param=ps.ProductParam(255, 255),

@@ -270,7 +270,21 @@ pub mod param_set {
     #[pymethods]
     impl FixedSurface {
         #[new]
-        fn new(surface_type: u8, scale_factor: i8, scaled_value: i32) -> PyResult<Self> {
+        fn new(
+            surface_type: &Bound<'_, PyAny>,
+            scale_factor: i8,
+            scaled_value: i32,
+        ) -> PyResult<Self> {
+            let surface_type = if let Ok(name) = surface_type.cast::<PyString>() {
+                let name = name.to_str()?;
+                crate::code_tables::lookup_fixed_surface_type(name).ok_or_else(|| {
+                    PyValueError::new_err(format!(
+                        "unknown Code Table 4.5 fixed surface type: {name:?}"
+                    ))
+                })?
+            } else {
+                surface_type.extract::<u8>()?
+            };
             if scale_factor == i8::MIN || scaled_value == i32::MIN {
                 return Err(PyValueError::new_err(
                     "GRIB signed values use sign-magnitude: scale_factor must be >= -127 and scaled_value >= -2147483647",

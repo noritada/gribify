@@ -256,15 +256,18 @@ class ForecastTime:
 class FixedSurface:
     """Python wrapper for grib::def::grib2::template::param_set::FixedSurface.
     """
-    def __new__(cls, surface_type: int, scale_factor: int, scaled_value: int) -> FixedSurface:
+    def __new__(cls, surface_type: int | str, scale_factor: int, scaled_value: int) -> FixedSurface:
         """Create FixedSurface.
 
         Parameters
         ----------
-        surface_type : int
+        surface_type : int | str
             Type of fixed surface (see Code Table 4.5).
 
             Encoded as an unsigned 8-bit integer. Accepted range: 0 to 255 (inclusive).
+            Python wrapper: also accepts the exact, case-sensitive strings in the
+            Code Table 4.5 table below. Unknown strings raise ValueError;
+            out-of-range integers raise OverflowError; other types raise TypeError.
         scale_factor : int
             Scale factor.
 
@@ -278,6 +281,24 @@ class FixedSurface:
 
         Notes
         -----
+        Python wrapper: accepted Code Table 4.5 strings (exact spelling):
+
+        <!-- codegen:fixed_surface_type:start -->
+        | Code | Strings |
+        | --- | --- |
+        | 1 | `"ground or water surface"` |
+        | 10 | `"entire atmosphere"` |
+        | 100 | `"isobaric surface"` |
+        | 101 | `"mean sea level"` |
+        | 102 | `"specific altitude above mean sea level"` |
+        | 103 | `"specified height level above ground"` |
+        | 105 | `"hybrid level"` |
+        | 106 | `"depth below land surface"` |
+        <!-- codegen:fixed_surface_type:end -->
+
+        Only the listed codes have string aliases. Trailing parenthesized units
+        are omitted. Missing has no string alias; integer 255 remains accepted.
+
         Python wrapper: scale_factor and scaled_value correspond to
         FixedSurface::value.scale_factor and FixedSurface::value.scaled_value. The
         represented value is scaled_value * 10**(-scale_factor). To encode an absent
@@ -292,7 +313,8 @@ class FixedSurface:
         Raises
         ------
         ValueError
-            If a signed value is the Rust minimum excluded by GRIB sign-magnitude.
+            If surface_type is an unknown string or a signed value is the Rust
+            minimum excluded by GRIB sign-magnitude.
         OverflowError
             If an integer is outside the underlying Rust integer range.
         """

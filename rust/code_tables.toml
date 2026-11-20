@@ -259,3 +259,40 @@ names = ["12 hours"]
 [[tables.time_range_unit.entries]]
 code = 13
 names = ["second"]
+
+[tables.fixed_surface_type]
+number = "4.5"
+source = "https://codes.ecmwf.int/grib/format/grib2/ctables/4/5/"
+bits = 8
+
+[[tables.fixed_surface_type.entries]]
+code = 1
+names = ["ground or water surface"]
+
+[[tables.fixed_surface_type.entries]]
+code = 10
+names = ["entire atmosphere"]
+
+[[tables.fixed_surface_type.entries]]
+code = 100
+names = ["isobaric surface"]
+
+[[tables.fixed_surface_type.entries]]
+code = 101
+names = ["mean sea level"]
+
+[[tables.fixed_surface_type.entries]]
+code = 102
+names = ["specific altitude above mean sea level"]
+
+[[tables.fixed_surface_type.entries]]
+code = 103
+names = ["specified height level above ground"]
+
+[[tables.fixed_surface_type.entries]]
+code = 105
+names = ["hybrid level"]
+
+[[tables.fixed_surface_type.entries]]
+code = 106
+names = ["depth below land surface"]

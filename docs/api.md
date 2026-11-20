@@ -162,6 +162,32 @@ Missing has no string alias; use `255`. Integer codes still accept 0 to 255
 (inclusive), encoded as unsigned 8-bit integers, including reserved codes.
 Out-of-range integers raise `OverflowError`; other types raise `TypeError`.
 
+## Code Table 4.5 string values
+
+`FixedSurface(surface_type=...)` accepts integer codes or the following selected
+strings from [ECMWF Code Table 4.5](https://codes.ecmwf.int/grib/format/grib2/ctables/4/5/).
+The first letter is lowercase, and trailing parenthesized units are omitted.
+
+<!-- codegen:fixed_surface_type:start -->
+| Code | Strings |
+| --- | --- |
+| 1 | `"ground or water surface"` |
+| 10 | `"entire atmosphere"` |
+| 100 | `"isobaric surface"` |
+| 101 | `"mean sea level"` |
+| 102 | `"specific altitude above mean sea level"` |
+| 103 | `"specified height level above ground"` |
+| 105 | `"hybrid level"` |
+| 106 | `"depth below land surface"` |
+<!-- codegen:fixed_surface_type:end -->
+
+Only these eight codes have string aliases. Strings are case-sensitive and must
+match exactly. For example, use `surface_type="isobaric surface"` in place of
+`surface_type=100`. Missing has no string alias; use integer `255`.
+Integer codes retain an unsigned 8-bit accepted range of 0 to 255 (inclusive),
+including codes without string aliases. Unknown strings raise `ValueError`,
+out-of-range integers raise `OverflowError`, and other types raise `TypeError`.
+
 ## Message generation
 
 ::: gribify.grib2_message
