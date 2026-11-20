@@ -45,9 +45,9 @@ def identification(data_type):
         subcentre_id=0,
         master_table_version=29,
         local_table_version=0,
-        ref_time_significance=1,  # Start of forecast.
+        ref_time_significance="start of forecast",
         ref_time=reference_time,
-        prod_status=1,  # Test products.
+        prod_status="operational test",
         data_type=data_type,
     )
 
@@ -57,15 +57,15 @@ absent_surface = ps.FixedSurface(
 )
 two_metres = ps.Horizontal(
     first_surface=ps.FixedSurface(
-        surface_type=103, scale_factor=0, scaled_value=2,
+        surface_type="specified height level above ground", scale_factor=0, scaled_value=2,
     ),
     second_surface=absent_surface,
 )
 six_hours = ps.ForecastTime(
-    cutoff_hours=0, cutoff_minutes=0, unit=1, time=6,
+    cutoff_hours=0, cutoff_minutes=0, unit="hour", time=6,
 )
 forecast_process = ps.GeneratingProcess(
-    process_type=2, background_process=0, process_id=0,
+    process_type="forecast", background_process=0, process_id=0,
 )
 
 product = gribify.ProductDefinition(gribify.Template4_0(
@@ -76,8 +76,8 @@ product = gribify.ProductDefinition(gribify.Template4_0(
 ))
 
 message = gribify.grib2_message(
-    discipline=0,
-    ident=identification(data_type=1),
+    discipline="meteorological",
+    ident=identification(data_type="forecast"),
     product=product,
     lats=lats,
     lngs=lngs,
@@ -89,11 +89,11 @@ Path("temperature.grib2").write_bytes(message)
 
 The choices that connect the data to its metadata are:
 
-- `discipline=0` with `category=0, num=0` describes temperature; the values
+- `discipline="meteorological"` with `category=0, num=0` describes temperature; the values
   supplied here are in kelvin.
-- `surface_type=103` and a value of `2` describe the height above ground.
+- `surface_type="specified height level above ground"` and a value of `2` describe the height above ground.
   An absent second surface makes this a level rather than a layer.
-- `unit=1, time=6` selects six hours after the reference time: 06:00 UTC.
+- `unit="hour", time=6` selects six hours after the reference time: 06:00 UTC.
 - The values have shape `(len(lats), len(lngs))`, here `(3, 4)`.
   `decimal_scale=1` requests packing with one decimal place.
 
@@ -121,7 +121,7 @@ member_temperature = temperature + 0.5  # Synthetic member values, in K.
 ensemble_product = gribify.ProductDefinition(gribify.Template4_1(
     param=ps.ProductParam(category=0, num=0),
     generating_process=ps.GeneratingProcess(
-        process_type=4, background_process=0, process_id=0,
+        process_type="ensemble forecast", background_process=0, process_id=0,
     ),
     forecast_time=six_hours,
     horizontal=two_metres,
@@ -133,8 +133,8 @@ ensemble_product = gribify.ProductDefinition(gribify.Template4_1(
 ))
 
 message = gribify.grib2_message(
-    discipline=0,
-    ident=identification(data_type=4),
+    discipline="meteorological",
+    ident=identification(data_type="perturbed forecast"),
     product=ensemble_product,
     lats=lats,
     lngs=lngs,
@@ -146,7 +146,7 @@ Path("temperature-member-1.grib2").write_bytes(message)
 
 The product describes positively perturbed member 1 of an ensemble containing
 20 forecasts, using `ensemble_forecast_type=3`. Section 1 also identifies it as
-a perturbed forecast through `data_type=4`. These choices follow
+a perturbed forecast through `data_type="perturbed forecast"`. These choices follow
 [Code Table 4.6](https://codes.ecmwf.int/grib/format/grib2/ctables/4/6/) and
 [Code Table 1.4](https://codes.ecmwf.int/grib/format/grib2/ctables/1/4/).
 
@@ -176,11 +176,11 @@ accumulated_product = gribify.ProductDefinition(gribify.Template4_8(
     param=ps.ProductParam(category=1, num=8),
     generating_process=forecast_process,
     forecast_time=ps.ForecastTime(
-        cutoff_hours=0, cutoff_minutes=0, unit=1, time=0,
+        cutoff_hours=0, cutoff_minutes=0, unit="hour", time=0,
     ),
     horizontal=ps.Horizontal(
         first_surface=ps.FixedSurface(
-            surface_type=1, scale_factor=0, scaled_value=0,
+            surface_type="ground or water surface", scale_factor=0, scaled_value=0,
         ),
         second_surface=absent_surface,
     ),
@@ -190,17 +190,17 @@ accumulated_product = gribify.ProductDefinition(gribify.Template4_8(
         time_ranges=[ps.StatisticalProcess(
             statistical_process_type=1,
             time_increment_type=2,
-            time_range_unit=1,
+            time_range_unit="hour",
             time_range_length=6,
-            time_increment_unit=1,
+            time_increment_unit="hour",
             time_increment_length=1,
         )],
     ),
 ))
 
 message = gribify.grib2_message(
-    discipline=0,
-    ident=identification(data_type=1),
+    discipline="meteorological",
+    ident=identification(data_type="forecast"),
     product=accumulated_product,
     lats=lats,
     lngs=lngs,
