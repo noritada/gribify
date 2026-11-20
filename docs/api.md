@@ -16,6 +16,7 @@ remain visible. Each class also provides `__repr__` for its textual representati
 time_increment_unit=...)` accept integers or the strings below, based on
 [ECMWF Code Table 4.4](https://codes.ecmwf.int/grib/format/grib2/ctables/4/4/).
 
+<!-- codegen:time_range_unit:start -->
 | Code | Strings |
 | --- | --- |
 | 0 | `"minute"` |
@@ -30,6 +31,7 @@ time_increment_unit=...)` accept integers or the strings below, based on
 | 11 | `"6 hours"` |
 | 12 | `"12 hours"` |
 | 13 | `"second"` |
+<!-- codegen:time_range_unit:end -->
 
 Strings are case-sensitive and must match exactly. For example,
 `param_set.ForecastTime(0, 0, "minute", 30)` is equivalent to

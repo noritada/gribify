@@ -83,8 +83,16 @@ name = "gribify"
 version = "0.1.0-rc.1"
 dependencies = [
  "grib",
+ "gribify-codegen",
  "numpy",
  "pyo3",
+]
+
+[[package]]
+name = "gribify-codegen"
+version = "0.1.0"
+dependencies = [
+ "toml_edit",
 ]
 
 [[package]]
@@ -499,4 +507,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "23b97319f7b8343df12cc98938e5c3eb436064524c8d2b4e30a1d3a36eecdf81"
 dependencies = [
  "memchr",
+]
+
+[[package]]
+name = "xtask"
+version = "0.1.0"
+dependencies = [
+ "gribify-codegen",
 ]

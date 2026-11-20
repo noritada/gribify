@@ -1,3 +1,7 @@
+mod code_tables {
+    include!(concat!(env!("OUT_DIR"), "/code_tables.rs"));
+}
+
 mod product;
 
 use grib::encoder;

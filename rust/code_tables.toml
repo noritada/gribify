@@ -1,0 +1,53 @@
+# Public string aliases. Preserve existing names for compatibility.
+[tables.time_range_unit]
+number = "4.4"
+source = "https://codes.ecmwf.int/grib/format/grib2/ctables/4/4/"
+bits = 8
+
+[[tables.time_range_unit.entries]]
+code = 0
+names = ["minute"]
+
+[[tables.time_range_unit.entries]]
+code = 1
+names = ["hour"]
+
+[[tables.time_range_unit.entries]]
+code = 2
+names = ["day"]
+
+[[tables.time_range_unit.entries]]
+code = 3
+names = ["month"]
+
+[[tables.time_range_unit.entries]]
+code = 4
+names = ["year"]
+
+[[tables.time_range_unit.entries]]
+code = 5
+names = ["decade", "10 years"]
+
+[[tables.time_range_unit.entries]]
+code = 6
+names = ["normal", "30 years"]
+
+[[tables.time_range_unit.entries]]
+code = 7
+names = ["century", "100 years"]
+
+[[tables.time_range_unit.entries]]
+code = 10
+names = ["3 hours"]
+
+[[tables.time_range_unit.entries]]
+code = 11
+names = ["6 hours"]
+
+[[tables.time_range_unit.entries]]
+code = 12
+names = ["12 hours"]
+
+[[tables.time_range_unit.entries]]
+code = 13
+names = ["second"]

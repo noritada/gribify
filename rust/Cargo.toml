@@ -12,3 +12,10 @@ crate-type = ["cdylib"]
 grib = { version = "0.21.0", default-features = false }
 pyo3 = { version = "0.30", features = ["experimental-inspect", "abi3-py311"] }
 numpy = "0.30"
+
+[workspace]
+members = ["codegen", "xtask"]
+resolver = "3"
+
+[build-dependencies]
+gribify-codegen = { path = "codegen" }

@@ -170,6 +170,7 @@ class ForecastTime:
         -----
         Python wrapper: accepted Code Table 4.4 strings (exact spelling):
 
+        <!-- codegen:time_range_unit:start -->
         | Code | Strings |
         | --- | --- |
         | 0 | `"minute"` |
@@ -184,6 +185,7 @@ class ForecastTime:
         | 11 | `"6 hours"` |
         | 12 | `"12 hours"` |
         | 13 | `"second"` |
+        <!-- codegen:time_range_unit:end -->
 
         Missing has no string alias; use integer 255. Integer codes retain the
         unsigned 8-bit accepted range of 0 to 255 (inclusive). Other types raise
@@ -368,6 +370,7 @@ class StatisticalProcess:
         -----
         Python wrapper: accepted Code Table 4.4 strings (exact spelling):
 
+        <!-- codegen:time_range_unit:start -->
         | Code | Strings |
         | --- | --- |
         | 0 | `"minute"` |
@@ -382,6 +385,7 @@ class StatisticalProcess:
         | 11 | `"6 hours"` |
         | 12 | `"12 hours"` |
         | 13 | `"second"` |
+        <!-- codegen:time_range_unit:end -->
 
         Missing has no string alias; use integer 255. Integer codes retain the
         unsigned 8-bit accepted range of 0 to 255 (inclusive). Other types raise

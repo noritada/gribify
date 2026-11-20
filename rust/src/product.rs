@@ -190,25 +190,9 @@ pub mod param_set {
     // Code Table 4.4 names are shared by forecast and statistical time ranges.
     fn parse_time_range_unit(value: &Bound<'_, PyAny>) -> PyResult<table::TimeRangeUnit> {
         let code = if let Ok(name) = value.cast::<PyString>() {
-            match name.to_str()? {
-                "minute" => 0,
-                "hour" => 1,
-                "day" => 2,
-                "month" => 3,
-                "year" => 4,
-                "decade" | "10 years" => 5,
-                "normal" | "30 years" => 6,
-                "century" | "100 years" => 7,
-                "3 hours" => 10,
-                "6 hours" => 11,
-                "12 hours" => 12,
-                "second" => 13,
-                name => {
-                    return Err(PyValueError::new_err(format!(
-                        "unknown Code Table 4.4 time unit: {name:?}"
-                    )));
-                }
-            }
+            crate::code_tables::lookup_time_range_unit(name.to_str()?).ok_or_else(|| {
+                PyValueError::new_err(format!("unknown Code Table 4.4 time unit: {:?}", name))
+            })?
         } else {
             value.extract::<u8>()?
         };
