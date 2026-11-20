@@ -10,6 +10,31 @@ The reference below is generated from the Python sources and distributed
 `.pyi` files. Constructor methods are shown explicitly so their typed arguments
 remain visible. Each class also provides `__repr__` for its textual representation.
 
+## Code Table 0.0 string values
+
+`grib2_message(discipline=...)` accepts integer codes or these strings, based on
+[ECMWF Code Table 0.0](https://codes.ecmwf.int/grib/format/grib2/ctables/0/0/).
+
+<!-- codegen:discipline:start -->
+| Code | Strings |
+| --- | --- |
+| 0 | `"meteorological"` |
+| 1 | `"hydrological"` |
+| 2 | `"land surface"` |
+| 3 | `"satellite remote sensing"`, `"space"` |
+| 4 | `"space weather"` |
+| 10 | `"oceanographic"` |
+| 20 | `"health and socioeconomic"` |
+<!-- codegen:discipline:end -->
+
+Strings are case-sensitive and must match exactly. The names omit `products`;
+code 3 also accepts `"space"`, and code 20 uses `"health and socioeconomic"`.
+For example, use `discipline="meteorological"` in place of `discipline=0`.
+Missing has no string alias; integer `255` remains accepted. Integer codes retain
+an unsigned 8-bit accepted range of 0 to 255 (inclusive), including reserved codes.
+Unknown strings raise `ValueError`, out-of-range integers raise `OverflowError`,
+and other types raise `TypeError`.
+
 ## Code Table 4.4 string values
 
 `ForecastTime(unit=...)` and `StatisticalProcess(time_range_unit=...,

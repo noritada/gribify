@@ -1,4 +1,4 @@
-use std::{env, fs, path::Path};
+use std::{collections::HashSet, env, fs, path::Path};
 
 fn main() {
     if let Err(error) = run() {
@@ -26,18 +26,33 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap();
     let tables = gribify_codegen::parse(&fs::read_to_string(root.join("rust/code_tables.toml"))?)?;
     let mut changes = Vec::new();
-    for file in ["docs/api.md", "src/gribify/_gribify/param_set.pyi"] {
+    let mut stub_tables = HashSet::new();
+    for file in [
+        "docs/api.md",
+        "src/gribify/__init__.py",
+        "src/gribify/_gribify/__init__.pyi",
+        "src/gribify/_gribify/param_set.pyi",
+    ] {
         let path = root.join(file);
         let old = fs::read_to_string(&path)?;
-        // Each table must be documented in both API HTML and editor-facing stubs.
+        // All tables belong on the API page and in at least one relevant stub.
         for table in &tables {
-            if !old.contains(&format!("<!-- codegen:{}:start -->", table.name)) {
+            let present = old.contains(&format!("<!-- codegen:{}:start -->", table.name));
+            if file == "docs/api.md" && !present {
                 return Err(format!("{file}: missing marker for {}", table.name).into());
+            }
+            if file.ends_with(".pyi") && present {
+                stub_tables.insert(&table.name);
             }
         }
         let new = gribify_codegen::update_document(&old, &tables)?;
         if new != old {
             changes.push((path, new));
+        }
+    }
+    for table in &tables {
+        if !stub_tables.contains(&table.name) {
+            return Err(format!("missing stub marker for {}", table.name).into());
         }
     }
     if check && !changes.is_empty() {

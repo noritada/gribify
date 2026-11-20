@@ -168,10 +168,12 @@ cargo xtask codegen
 ```
 
 This updates only the regions delimited by `<!-- codegen:NAME:start -->` and
-`<!-- codegen:NAME:end -->` in `docs/api.md` and
-`src/gribify/_gribify/param_set.pyi`, retaining docstring indentation. Semantic
-prose, constraints, signatures, and examples remain hand-maintained. For a new
-Code Table, add its named markers to both files and wire the generated
+`<!-- codegen:NAME:end -->` in `docs/api.md`, `src/gribify/__init__.py`, and the
+`__init__.pyi` and `param_set.pyi` stubs in `src/gribify/_gribify/`, retaining
+docstring indentation. Semantic prose, constraints, signatures, and examples
+remain hand-maintained. For a new Code Table, add its named markers to the API
+page and the relevant stub (and public Python docstring when applicable), and
+wire the generated
 `lookup_NAME` function into the appropriate Rust argument conversion. The table
 name must be nonempty and contain only lowercase ASCII letters, digits, and
 underscores. The generated lookup returns `Option<u8>`, `Option<u16>`, or

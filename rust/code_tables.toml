@@ -1,4 +1,37 @@
 # Public string aliases. Preserve existing names for compatibility.
+[tables.discipline]
+number = "0.0"
+source = "https://codes.ecmwf.int/grib/format/grib2/ctables/0/0/"
+bits = 8
+
+[[tables.discipline.entries]]
+code = 0
+names = ["meteorological"]
+
+[[tables.discipline.entries]]
+code = 1
+names = ["hydrological"]
+
+[[tables.discipline.entries]]
+code = 2
+names = ["land surface"]
+
+[[tables.discipline.entries]]
+code = 3
+names = ["satellite remote sensing", "space"]
+
+[[tables.discipline.entries]]
+code = 4
+names = ["space weather"]
+
+[[tables.discipline.entries]]
+code = 10
+names = ["oceanographic"]
+
+[[tables.discipline.entries]]
+code = 20
+names = ["health and socioeconomic"]
+
 [tables.time_range_unit]
 number = "4.4"
 source = "https://codes.ecmwf.int/grib/format/grib2/ctables/4/4/"

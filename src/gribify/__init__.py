@@ -13,7 +13,7 @@ __all__ = [
 ]
 
 def grib2_message(
-    discipline: int,
+    discipline: int | str,
     ident: Identification,
     product: Union[ProductDefinition, bytes],
     lats: np.ndarray[tuple[int], np.dtype[np.float64]],
@@ -27,11 +27,14 @@ def grib2_message(
 
     Parameters
     ----------
-    discipline : int
+    discipline : int | str
         Discipline - GRIB Master Table Number (see Code Table 0.0).
 
         Encoded as an unsigned 8-bit integer. Accepted range: 0 to 255 (inclusive).
-        Code-table validity is the caller's responsibility.
+        Code-table validity is the caller's responsibility. Python wrapper: also
+        accepts the exact, case-sensitive strings listed below. Unknown strings
+        raise ValueError; out-of-range integers raise OverflowError; other types
+        raise TypeError. Missing has no string alias; integer 255 remains accepted.
     ident : Identification
         Section 1 - Identification section.
     product : Union[ProductDefinition, bytes]
@@ -78,6 +81,22 @@ def grib2_message(
         as an IEEE 32-bit floating-point value.
         -32768 raises ValueError; values outside the signed 16-bit Python-to-Rust
         conversion range raise OverflowError. Non-integer values raise TypeError.
+
+    Notes
+    -----
+    Python wrapper: accepted Code Table 0.0 strings (exact spelling):
+
+    <!-- codegen:discipline:start -->
+    | Code | Strings |
+    | --- | --- |
+    | 0 | `"meteorological"` |
+    | 1 | `"hydrological"` |
+    | 2 | `"land surface"` |
+    | 3 | `"satellite remote sensing"`, `"space"` |
+    | 4 | `"space weather"` |
+    | 10 | `"oceanographic"` |
+    | 20 | `"health and socioeconomic"` |
+    <!-- codegen:discipline:end -->
 
     Returns
     -------

@@ -20,14 +20,14 @@ mod gribify {
     use pyo3::{
         exceptions::PyRuntimeError,
         prelude::*,
-        types::{PyBytes, PyDateTime},
+        types::{PyBytes, PyDateTime, PyString},
     };
 
     #[pyfunction]
     #[pyo3(signature = (discipline, ident, product, lats, lngs, values, *, packing="complex", decimal_scale))]
     fn grib2_message<'py>(
         py: Python<'py>,
-        discipline: u8,
+        discipline: &Bound<'_, PyAny>,
         ident: &Identification,
         product: Bound<'py, PyAny>,
         lats: PyReadonlyArray1<'py, f64>,
@@ -36,6 +36,16 @@ mod gribify {
         packing: &str,
         decimal_scale: i16,
     ) -> PyResult<Bound<'py, PyBytes>> {
+        let discipline = if let Ok(name) = discipline.cast::<PyString>() {
+            let name = name.to_str()?;
+            crate::code_tables::lookup_discipline(name).ok_or_else(|| {
+                pyo3::exceptions::PyValueError::new_err(format!(
+                    "unknown Code Table 0.0 discipline: {name:?}"
+                ))
+            })?
+        } else {
+            discipline.extract::<u8>()?
+        };
         if decimal_scale == i16::MIN {
             return Err(pyo3::exceptions::PyValueError::new_err(
                 "decimal_scale must be between -32767 and 32767 (inclusive)",
